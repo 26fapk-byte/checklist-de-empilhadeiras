@@ -53,55 +53,10 @@ const DEFAULT_EQUIPMENTS: Equipment[] = [
 ];
 
 // Pre-hydrate some checklists to simulate operational history right out of the gate
+// DESATIVADO: Os dados de teste foram removidos para entregar o app zerado
 const getInitialHistory = (): ChecklistRecord[] => {
-  const history: ChecklistRecord[] = [];
-  const currentDate = new Date();
-  
-  // Create simulated inspections over the last 30 days
-  for (let i = 25; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(currentDate.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    const hourStr = `${String(8 + (i % 5)).padStart(2, '0')}:${String((12 + i * 3) % 60).padStart(2, '0')}`;
-    const operator = DEFAULT_OPERATORS[i % DEFAULT_OPERATORS.length];
-    const equipment = DEFAULT_EQUIPMENTS[(i + 1) % DEFAULT_EQUIPMENTS.length];
-    
-    // Most run OK, some carry NOK on minor items
-    const hasNok = i === 4 || i === 12 || i === 19;
-    
-    CHECKLIST_ITEMS.forEach((item) => {
-      let status: 'OK' | 'NOK' = 'OK';
-      let obs = '';
-      
-      if (hasNok && item.key === 'buzina' && i === 4) {
-        status = 'NOK';
-        obs = 'Buzina com som muito baixo, requer troca de contato.';
-      } else if (hasNok && item.key === 'nivel_bateria' && i === 12) {
-        status = 'NOK';
-        obs = 'Nível de bateria abaixo do esperado para início de turno (1 Barra).';
-      } else if (hasNok && item.key === 'limpeza_empilhadeira' && i === 19) {
-        status = 'NOK';
-        obs = 'Resíduos lubrificantes na cabine de controle.';
-      }
-      
-      history.push({
-        id: generateUUID(),
-        created_at: `${dateStr}T${hourStr}:00.000Z`,
-        data: dateStr,
-        hora: hourStr,
-        operador: operator.nome,
-        equipamento: `${equipment.nome} (${equipment.patrimonio})`,
-        item: item.label,
-        status,
-        observacao: obs,
-        patrimonio: equipment.patrimonio,
-        horimetro: 1200 + (i * 8),
-        ligando: 'OK',
-        bateria_barras: status === 'NOK' && item.key === 'nivel_bateria' ? 1 : 4
-      });
-    });
-  }
-  return history;
+  // Retorna array vazio - sem dados de teste
+  return [];
 };
 
 // Local storage namespaces
