@@ -1,0 +1,24 @@
+{
+  "short_name": "LogiCheck",
+  "name": "LogiCheck - Checklist de Empilhadeiras",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/9356/9356230.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/9356/9356230.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e3a8a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "description": "Sistema PWA moderno, mobile-first e extremamente simples para registro operacional de checklists de empilhadeiras em ambientes hospitalares e logisticos."
+}
