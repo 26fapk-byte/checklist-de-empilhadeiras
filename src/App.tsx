@@ -8,11 +8,12 @@ import PreventiveChecklist from './pages/PreventiveChecklist';
 import BatteryRecharge from './pages/BatteryRecharge';
 import History from './pages/History';
 import TeamManagement from './pages/TeamManagement';
+import ManageUsers from './pages/ManageUsers';
 
 function AppContent() {
   const { user, loading } = useAuth();
   const [tab, setTab] = useState<
-    'dashboard' | 'new-record' | 'preventive-checklist' | 'battery-recharge' | 'history' | 'team-management'
+    'dashboard' | 'new-record' | 'preventive-checklist' | 'battery-recharge' | 'history' | 'team-management' | 'manage-users'
   >('preventive-checklist');
 
   // Automatically select default screen based on authorization role
@@ -50,6 +51,7 @@ function AppContent() {
       {tab === 'battery-recharge' && <BatteryRecharge />}
       {tab === 'history' && <History />}
       {tab === 'team-management' && <TeamManagement />}
+      {tab === 'manage-users' && <ManageUsers />}
     </Navigation>
   );
 }

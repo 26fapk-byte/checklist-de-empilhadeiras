@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { LocalDb } from '../lib/db';
+import { useToast } from '../hooks/useToast';
 import { 
   LayoutDashboard, 
   ClipboardCheck,
@@ -11,13 +12,16 @@ import {
   Download, 
   RefreshCw, 
   Smartphone,
-  Users
+  Users,
+  Lock,
+  ChevronDown
 } from 'lucide-react';
 import BrandMark from './BrandMark';
+import ChangePassword from './ChangePassword';
 
 interface NavigationProps {
-  currentTab: 'dashboard' | 'new-record' | 'preventive-checklist' | 'battery-recharge' | 'history' | 'team-management';
-  setTab: (tab: 'dashboard' | 'new-record' | 'preventive-checklist' | 'battery-recharge' | 'history' | 'team-management') => void;
+  currentTab: 'dashboard' | 'new-record' | 'preventive-checklist' | 'battery-recharge' | 'history' | 'team-management' | 'manage-users';
+  setTab: (tab: 'dashboard' | 'new-record' | 'preventive-checklist' | 'battery-recharge' | 'history' | 'team-management' | 'manage-users') => void;
   children: React.ReactNode;
 }
 
@@ -27,6 +31,9 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
   const [syncing, setSyncing] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const { toast, showToast } = useToast();
 
   // Poll for offline sync cache count
   useEffect(() => {
@@ -107,20 +114,42 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
             )}
 
             {user && (
-              <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
-                <div className="text-right">
-                  <p className="max-w-[120px] truncate text-xs font-semibold text-[#0f172a]">{user.name}</p>
-                  <p className="text-[9px] font-semibold leading-none text-slate-500">
-                    {user.role === 'gerente' || user.role === 'master' ? 'Gestão' : 'Operação'}
-                  </p>
-                </div>
+              <div className="relative flex items-center gap-2 border-l border-slate-200 pl-3">
                 <button
-                  onClick={logout}
-                  title="Efetuar Logoff"
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-red-700"
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <div className="text-right">
+                    <p className="max-w-[120px] truncate text-xs font-semibold text-[#0f172a]">{user.name}</p>
+                    <p className="text-[9px] font-semibold leading-none text-slate-500">
+                      {user.role === 'gerente' || user.role === 'master' ? 'Gestão' : 'Operação'}
+                    </p>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
                 </button>
+
+                {showProfileMenu && (
+                  <div className="absolute top-full right-0 mt-2 w-48 rounded-lg border border-slate-200 bg-white shadow-lg z-50">
+                    <button
+                      onClick={() => {
+                        setShowChangePassword(true);
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 border-b border-slate-100 font-medium"
+                    >
+                      <Lock className="w-4 h-4" /> Alterar Senha
+                    </button>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 font-medium"
+                    >
+                      <LogOut className="w-4 h-4" /> Sair
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -232,6 +261,21 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
 
         {(user?.role === 'gerente' || user?.role === 'master') && (
           <button
+            onClick={() => setTab('manage-users')}
+            className={`min-w-[76px] h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'manage-users'
+                ? 'text-[#1E3A8A] font-semibold'
+                : 'text-[#6C797B] hover:text-[#1E3A8A]'
+              }`}
+          >
+            <div className={`p-1 rounded-md transition-colors ${currentTab === 'manage-users' ? 'bg-[#EBF5FF]' : ''}`}>
+              <Users className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] tracking-wide font-medium">Operadores</span>
+          </button>
+        )}
+
+        {(user?.role === 'gerente' || user?.role === 'master') && (
+          <button
             onClick={() => setTab('team-management')}
             className={`min-w-[70px] h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'team-management'
                 ? 'text-[#1E3A8A] font-semibold'
@@ -246,6 +290,12 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
         )}
         </div>
       </nav>
+
+      <ChangePassword 
+        isOpen={showChangePassword} 
+        onClose={() => setShowChangePassword(false)} 
+        showToast={showToast}
+      />
 
     </div>
   );

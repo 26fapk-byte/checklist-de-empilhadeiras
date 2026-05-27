@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { AlertTriangle, Battery, ClipboardCheck, Gauge, Truck } from 'lucide-react';
-import { LocalDb, CHECKLIST_ITEMS, generateUUID, getEquipmentsFromSupabase } from '../lib/db';
+import { CHECKLIST_ITEMS, generateUUID, getEquipmentsFromSupabase } from '../lib/db';
+import { supabase } from '../lib/supabase'; // Garanta que essa importação aponta para o seu cliente supabase
 import { useAuth } from '../context/AuthContext';
 import { PreventiveChecklistSubmission, Equipment } from '../types';
 import StatusToggle from '../components/StatusToggle';
@@ -9,7 +10,7 @@ import { useToast } from '../hooks/useToast';
 
 export default function PreventiveChecklist() {
   const { user } = useAuth();
-  const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [equipments, setEquipments] = useState<any[]>([]);
   const { toast, showToast } = useToast();
   const [equipment, setEquipment] = useState('');
   const [horimetro, setHorimetro] = useState('');
@@ -17,16 +18,31 @@ export default function PreventiveChecklist() {
   const [generalNotes, setGeneralNotes] = useState('');
   const [signatureName, setSignatureName] = useState(user?.name || '');
   const [signatureAccepted, setSignatureAccepted] = useState(false);
+  const [latestRecords, setLatestRecords] = useState<any[]>([]);
 
+  // 1. CARREGA EQUIPAMENTOS DO SUPABASE
   useEffect(() => {
     let active = true;
     async function load() {
       const data = await getEquipmentsFromSupabase();
-      if (active) setEquipments(data);
+      if (active) setEquipments(data || []);
     }
     load();
     return () => { active = false; };
   }, []);
+
+  // 2. CARREGA HISTÓRICO REAL DO SUPABASE PARA O PREVIEW
+  useEffect(() => {
+    async function loadHistory() {
+      const { data } = await supabase
+        .from('registros_checklist')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(4);
+      if (data) setLatestRecords(data);
+    }
+    loadHistory();
+  }, [toast.visible]);
 
   const [itemsState, setItemsState] = useState<Record<string, { status: 'OK' | 'NOK'; observacao: string }>>(() => {
     const state: Record<string, { status: 'OK' | 'NOK'; observacao: string }> = {};
@@ -36,13 +52,13 @@ export default function PreventiveChecklist() {
     return state;
   });
 
-  const latestRecords = useMemo(() => LocalDb.getPreventiveChecklists().slice(0, 4), [toast.visible]);
   const statusGeral = useMemo(
-    () => (Object.values(itemsState).some((item) => item.status === 'NOK' ? true : false) ? 'NOK' : 'OK'),
+    () => (Object.values(itemsState).some((item) => item.status === 'NOK') ? 'NOK' : 'OK'),
     [itemsState]
   );
 
-  const handleSave = () => {
+  // 3. SALVAMENTO DIRETO NO BANCO DE DADOS (SUPABASE)
+  const handleSave = async () => {
     if (!user) return;
     if (!equipment) return showToast('Selecione o equipamento inspecionado.', 'error');
     if (!horimetro.trim()) return showToast('Informe o horímetro.', 'error');
@@ -53,15 +69,17 @@ export default function PreventiveChecklist() {
     const pending = CHECKLIST_ITEMS.find((item) => itemsState[item.key].status === 'NOK' && !itemsState[item.key].observacao.trim());
     if (pending) return showToast(`Descreva o item NOK: ${pending.label}.`, 'error');
 
-    const selectedEq = equipments.find((eq) => eq.patrimonio === equipment);
+    // Mapeia usando o id ou codigo vindo do banco
+    const selectedEq = equipments.find((eq) => eq.id === equipment || eq.codigo === equipment);
     const now = new Date();
-    const submission: PreventiveChecklistSubmission = {
+    
+    const submission = {
       id: generateUUID(),
       created_at: now.toISOString(),
       data: now.toISOString().slice(0, 10),
       hora: now.toTimeString().slice(0, 5),
-      operador: user.name,
-      equipamento: selectedEq ? selectedEq.nome : equipment,
+      operador: user.email,
+      equipamento: selectedEq ? selectedEq.nome : 'Empilhadeira',
       patrimonio: equipment,
       horimetro: Number(horimetro.replace(',', '.')),
       bateria_barras: batteryBars,
@@ -77,13 +95,19 @@ export default function PreventiveChecklist() {
       }))
     };
 
-    LocalDb.savePreventiveChecklist(submission);
-    showToast('Checklist preventivo registrado com sucesso.');
-    setEquipment('');
-    setHorimetro('');
-    setBatteryBars(4);
-    setGeneralNotes('');
-    setSignatureAccepted(false);
+    // Gravação assíncrona no Supabase
+    const { error } = await supabase.from('registros_checklist').insert([submission]);
+
+    if (error) {
+      showToast(`Erro ao salvar no banco: ${error.message}`, 'error');
+    } else {
+      showToast('Checklist preventivo registrado com sucesso no Supabase.');
+      setEquipment('');
+      setHorimetro('');
+      setBatteryBars(4);
+      setGeneralNotes('');
+      setSignatureAccepted(false);
+    }
   };
 
   return (
@@ -99,7 +123,7 @@ export default function PreventiveChecklist() {
           <ClipboardCheck className="mt-1 h-5 w-5 text-[#4364f7]" />
           <div>
             <h2 className="text-lg font-semibold tracking-tight">Checklist Preventivo de Empilhadeira</h2>
-            <p className="mt-1 text-xs text-slate-400">Fluxo operacional mobile-first com rastreabilidade e sincronização posterior.</p>
+            <p className="mt-1 text-xs text-slate-400">Fluxo operacional mobile-first integrado com o Supabase.</p>
           </div>
         </div>
       </header>
@@ -108,7 +132,7 @@ export default function PreventiveChecklist() {
         <div>
           <label className="tkf-label">Operador autenticado</label>
           <div className="mt-1.5 flex h-12 w-full items-center rounded-xl border border-white/5 bg-[#131a2c]/60 px-3 text-sm font-semibold text-slate-300 select-none">
-            {user?.name}
+            {user?.email}
           </div>
         </div>
 
@@ -116,9 +140,14 @@ export default function PreventiveChecklist() {
           <label className="tkf-label">Equipamento</label>
           <select value={equipment} onChange={(event) => setEquipment(event.target.value)} className="tkf-select mt-1.5">
             <option value="">Selecionar patrimônio</option>
-            {equipments.map((eq) => (
-              <option key={eq.id} value={eq.patrimonio}>{eq.patrimonio} - {eq.nome}</option>
-            ))}
+            {equipments.map((eq) => {
+              const displayValue = eq.codigo || eq.patrimonio;
+              return (
+                <option key={eq.id} value={displayValue}>
+                  {displayValue} - {eq.nome}
+                </option>
+              );
+            })}
           </select>
         </div>
 
@@ -173,36 +202,16 @@ export default function PreventiveChecklist() {
         </div>
       </section>
 
-      <section className="tkf-card p-4">
-        <label className="tkf-label">Observações gerais</label>
-        <textarea value={generalNotes} onChange={(event) => setGeneralNotes(event.target.value)} rows={3} className="mt-2 w-full rounded-xl border border-white/10 bg-[#131a2c] px-3 py-2 text-sm text-white focus:border-[#4364f7] outline-none" placeholder="Observações adicionais ou notas técnicas..." />
+      <section className="tkf-card p-4 space-y-3">
+        <label className="tkf-label">Observações Gerais</label>
+        <textarea value={generalNotes} onChange={(e) => setGeneralNotes(e.target.value)} rows={3} className="w-full rounded-xl border border-white/10 bg-[#131a2c] px-3 py-2 text-sm text-white outline-none" placeholder="Opcional: Descreva observações adicionais sobre a máquina..." />
       </section>
 
-      <SignatureField
-        signerName={signatureName}
-        acknowledged={signatureAccepted}
-        onSignerNameChange={setSignatureName}
-        onAcknowledgedChange={setSignatureAccepted}
-      />
-
-      <button onClick={handleSave} className="tkf-btn-primary w-full h-14 flex items-center justify-center gap-2 cursor-pointer text-sm font-bold uppercase tracking-wider">
-        <Truck className="h-4 w-4" />
-        Salvar Checklist Preventivo
-      </button>
-
-      <section className="tkf-card p-4 space-y-3">
-        <h3 className="tkf-label">Últimos envios</h3>
-        {latestRecords.length === 0 ? (
-          <p className="text-xs text-slate-400">Nenhum checklist preventivo registrado.</p>
-        ) : latestRecords.map((entry) => (
-          <div key={entry.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-[#131a2c]/30 px-3 py-2 text-xs">
-            <div>
-              <p className="font-semibold text-slate-200">{entry.patrimonio}</p>
-              <p className="text-slate-400">{entry.data.split('-').reverse().join('/')} {entry.hora}</p>
-            </div>
-            {entry.status_geral === 'NOK' ? <AlertTriangle className="h-4 w-4 text-amber-500 animate-pulse" /> : <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 text-[10px] font-bold text-emerald-300">OK</span>}
-          </div>
-        ))}
+      <section className="tkf-card p-4">
+        <SignatureField name={signatureName} onNameChange={setSignatureName} accepted={signatureAccepted} onAcceptChange={setSignatureAccepted} />
+        <button type="button" onClick={handleSave} className="tkf-btn-primary w-full mt-4 py-3.5 text-sm font-bold tracking-wide">
+          Salvar e Enviar Inspeção
+        </button>
       </section>
     </div>
   );
