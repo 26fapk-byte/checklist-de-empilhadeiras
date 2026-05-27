@@ -29,7 +29,7 @@ export async function subscribeToNotifications() {
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: process.env.VITE_PUSH_PUBLIC_KEY
+      applicationServerKey: ((import.meta as any).env.VITE_PUSH_PUBLIC_KEY || '') as any
     });
 
     await fetch('/api/notifications/subscribe', {

@@ -346,10 +346,6 @@ Operador abre app
 │ {                                                │
 │   "buildCommand": "npm run build",               │
 │   "outputDirectory": "dist",                     │
-│   "env": {                                       │
-│     "VITE_SUPABASE_URL": "@vite_supabase_url",  │
-│     "VITE_SUPABASE_ANON_KEY": "@..."            │
-│   },                                             │
 │   "rewrites": [                                  │
 │     { "source": "/(.*)", "dest": "/index.html" }│
 │   ],                                             │
@@ -357,6 +353,9 @@ Operador abre app
 │     { Cache-Control, X-Frame-Options, ... }     │
 │   ]                                              │
 │ }                                                │
+│                                                  │
+│ ⚠️  Environment variables configuradas no        │
+│    Vercel Dashboard (não em vercel.json)         │
 └──────────────────────────────────────────────────┘
 ```
 
