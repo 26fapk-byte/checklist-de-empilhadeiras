@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
+<<<<<<< HEAD
 import { LocalDb, generateUUID, getEquipmentsFromSupabase, addEquipmentToSupabase, removeEquipmentFromSupabase } from '../lib/db';
+=======
+import { LocalDb } from '../lib/db';
+>>>>>>> baeeec2 (fix: normalize dashboard terminology to checklist system)
 import { ChecklistRecord, Equipment } from '../types';
 import {
   Truck,
@@ -94,7 +98,7 @@ export default function Dashboard() {
         ...equipment,
         lastInspection: latest ? `${latest.data.split('-').reverse().join('/')} ${latest.hora}` : 'Sem registro',
         lastOperator: latest?.operador ?? 'Sem operador',
-        status: latest ? (failedItems.length > 0 ? 'NOK' : 'OK') : 'Sem inspe√ß√£o',
+        status: latest ? (failedItems.length > 0 ? 'NOK' : 'OK') : 'Sem inspeÁ„o',
         failedItems
       };
     });
@@ -133,16 +137,16 @@ export default function Dashboard() {
   const handleDeleteRecord = (id: string) => {
     // Permission check: Only gerente/master can delete
     if (!user || (user.role !== 'gerente' && user.role !== 'master')) {
-      setNotification({ message: 'Voc√™ n√£o tem permiss√£o para excluir registros.', type: 'error' });
+      setNotification({ message: 'VocÍ n„o tem permiss„o para excluir registros.', type: 'error' });
       return;
     }
 
     const success = LocalDb.deleteRecord(id);
     if (success) {
-      setNotification({ message: 'Registro exclu√≠do com sucesso.', type: 'success' });
+      setNotification({ message: 'Registro excluÌdo com sucesso.', type: 'success' });
       loadData();
     } else {
-      setNotification({ message: 'N√£o foi poss√≠vel excluir o registro. Tente novamente.', type: 'error' });
+      setNotification({ message: 'N„o foi possÌvel excluir o registro. Tente novamente.', type: 'error' });
     }
   };
 
@@ -170,6 +174,7 @@ export default function Dashboard() {
     }
   };
 
+<<<<<<< HEAD
   const handleRemoveEquipment = async (id: string) => {
     try {
       await removeEquipmentFromSupabase(id);
@@ -178,6 +183,12 @@ export default function Dashboard() {
     } catch (err) {
       setNotification({ message: 'N√£o foi poss√≠vel remover no Supabase.', type: 'error' });
     }
+=======
+  const handleRemoveEquipment = (id: string) => {
+    LocalDb.removeEquipment(id);
+    setNotification({ message: 'Equipamento removido da Checklists.', type: 'success' });
+    loadData();
+>>>>>>> baeeec2 (fix: normalize dashboard terminology to checklist system)
   };
 
   useEffect(() => {
@@ -196,8 +207,13 @@ export default function Dashboard() {
 
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
+<<<<<<< HEAD
           <h1 className="tkf-title">Painel Operacional Enterprise</h1>
           <p className="text-sm text-[#475569] max-w-2xl mt-1">Vis√£o gerencial de produtividade, ativos e auditorias da opera√ß√£o TKF LogiCheck.</p>
+=======
+          <h1 className="text-2xl font-bold text-[#1F2937]">Painel Administrativo</h1>
+          <p className="text-sm text-[#475569] max-w-2xl mt-1">Vis„o gerencial de produtividade, ativos e auditorias para a Checklists LogiCheck.</p>
+>>>>>>> baeeec2 (fix: normalize dashboard terminology to checklist system)
         </div>
       </div>
 
@@ -233,10 +249,15 @@ export default function Dashboard() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+<<<<<<< HEAD
         <article className="tkf-card p-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Inspe√ß√µes totais</p>
+=======
+        <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">InspeÁıes totais</p>
+>>>>>>> baeeec2 (fix: normalize dashboard terminology to checklist system)
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{totalInspections}</h2>
-          <p className="mt-2 text-xs text-[#475569]">Contagem de checklists √∫nicos enviados hoje e no hist√≥rico.</p>
+          <p className="mt-2 text-xs text-[#475569]">Contagem de checklists ˙nicos enviados hoje e no histÛrico.</p>
         </article>
 
         <article className="tkf-card p-5">
@@ -262,16 +283,16 @@ export default function Dashboard() {
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{totalNok}</h2>
           <div className="mt-2 flex items-center gap-2 text-xs text-[#881337]">
             <AlertCircle className="w-4 h-4" />
-            <span>Registros com n√£o conformidades</span>
+            <span>Registros com n„o conformidades</span>
           </div>
         </article>
 
         <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">M√°quinas ativas</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">M·quinas ativas</p>
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{equipments.length}</h2>
           <div className="mt-2 flex items-center gap-2 text-xs text-[#1D4ED8]">
             <Truck className="w-4 h-4" />
-            <span>Equipamentos cadastrados</span>
+            <span>Checklists registrados</span>
           </div>
         </article>
       </section>
@@ -290,13 +311,13 @@ export default function Dashboard() {
 
           <div className="mt-5 space-y-3">
             {operatorRanking.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">Ainda n√£o h√° registros suficientes.</div>
+              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">Ainda n„o h· registros suficientes.</div>
             ) : (
               operatorRanking.map((entry, index) => (
               <div key={entry.operador} className="flex items-center justify-between rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
                   <div>
                     <p className="text-sm font-semibold text-[#0F172A]">{entry.operador}</p>
-                    <p className="text-[11px] text-[#64748B]">A√ß√µes registradas</p>
+                    <p className="text-[11px] text-[#64748B]">AÁıes registradas</p>
                   </div>
                   <div className="rounded-full bg-[#E2E8F8] px-3 py-1 text-sm font-bold text-[#0F172A]">{entry.count}</div>
                 </div>
@@ -305,16 +326,22 @@ export default function Dashboard() {
           </div>
         </article>
 
+<<<<<<< HEAD
         <article className="tkf-card p-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Sa√∫de da Frota</p>
           <h2 className="mt-2 text-xl font-bold text-[#0F172A]">Empilhadeiras cr√≠ticas</h2>
+=======
+        <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Sa˙de da Checklists</p>
+          <h2 className="mt-2 text-xl font-bold text-[#0F172A]">⁄ltima inspeÁ„o por equipamento</h2>
+>>>>>>> baeeec2 (fix: normalize dashboard terminology to checklist system)
           <div className="mt-5 space-y-3">
             {(criticalEquipments.length ? criticalEquipments : equipmentHealth.slice(0, 5)).map((equipment) => (
               <div key={equipment.id} className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-[#0F172A]">{equipment.nome}</p>
-                    <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} ‚Ä¢ {equipment.tipo}</p>
+                    <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} ï {equipment.tipo}</p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${equipment.status === 'OK' ? 'bg-[#E6F7F8] text-[#006970]' : equipment.status === 'NOK' ? 'bg-[#FEF2F2] text-[#981B1B]' : 'bg-[#E2E8F0] text-[#475569]'}`}>
                     {equipment.status}
@@ -359,7 +386,7 @@ export default function Dashboard() {
                   <th className="px-3 py-3">Item</th>
                   <th className="px-3 py-3">Status</th>
                   <th className="px-3 py-3">Operador</th>
-                  <th className="px-3 py-3">A√ß√£o</th>
+                  <th className="px-3 py-3">AÁ„o</th>
                 </tr>
               </thead>
               <tbody>
@@ -385,7 +412,7 @@ export default function Dashboard() {
                           Excluir
                         </button>
                       ) : (
-                        <span className="text-[11px] text-[#6C797B]">Sem permiss√£o</span>
+                        <span className="text-[11px] text-[#6C797B]">Sem permiss„o</span>
                       )}
                     </td>
                   </tr>
@@ -394,7 +421,7 @@ export default function Dashboard() {
             </table>
           </div>
           {filteredRecords.length > 15 && (
-            <div className="mt-4 text-xs text-[#64748B]">Apenas os 15 registros mais recentes s√£o exibidos aqui para performance.</div>
+            <div className="mt-4 text-xs text-[#64748B]">Apenas os 15 registros mais recentes s„o exibidos aqui para performance.</div>
           )}
         </article>
 
@@ -403,7 +430,7 @@ export default function Dashboard() {
             <Plus className="w-5 h-5 text-[#1E3A8A]" />
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Cadastro de Equipamento</p>
-              <h2 className="text-xl font-bold text-[#0F172A]">Gerencie ativos da frota</h2>
+              <h2 className="text-xl font-bold text-[#0F172A]">Gerencie ativos da Checklists</h2>
             </div>
           </div>
 
@@ -413,12 +440,17 @@ export default function Dashboard() {
               <input
                 value={equipmentName}
                 onChange={(event) => setEquipmentName(event.target.value)}
+<<<<<<< HEAD
                 className="tkf-input"
                 placeholder="Empilhadeira el√©trica Toyota 8FBRE16S"
+=======
+                className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#0F172A] focus:border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/10"
+                placeholder="Empilhadeira elÈtrica Toyota 8FBRE16S"
+>>>>>>> baeeec2 (fix: normalize dashboard terminology to checklist system)
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">Patrim√¥nio</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">PatrimÙnio</label>
               <input
                 value={equipmentPatrimonio}
                 onChange={(event) => setEquipmentPatrimonio(event.target.value)}
@@ -431,8 +463,13 @@ export default function Dashboard() {
               <input
                 value={equipmentType}
                 onChange={(event) => setEquipmentType(event.target.value)}
+<<<<<<< HEAD
                 className="tkf-input"
                 placeholder="Empilhadeira retr√°til"
+=======
+                className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#0F172A] focus:border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/10"
+                placeholder="Empilhadeira retr·til"
+>>>>>>> baeeec2 (fix: normalize dashboard terminology to checklist system)
               />
             </div>
             <button
@@ -445,7 +482,7 @@ export default function Dashboard() {
           </div>
 
           <div className="mt-8 space-y-3">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Ativos cadastrados</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Registros operacionais</div>
             {equipments.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">Nenhum equipamento cadastrado.</div>
             ) : (
@@ -455,7 +492,7 @@ export default function Dashboard() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-[#0F172A]">{equipment.nome}</p>
-                        <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} ‚Ä¢ {equipment.tipo}</p>
+                        <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} ï {equipment.tipo}</p>
                       </div>
                       <button
                         type="button"
@@ -512,11 +549,11 @@ export default function Dashboard() {
       <section className="tkf-card-muted p-5 text-sm text-[#475569]">
         <div className="flex items-center gap-2 font-semibold text-[#0F172A] mb-2">
           <Info className="w-4 h-4" />
-          Observa√ß√£o de Gest√£o
+          ObservaÁ„o de Gest„o
         </div>
         <p>
-          Esta √°rea permite que gerentes visualizem o status de toda frota, ajustem ativos e removam registros indevidos com seguran√ßa.
-          A exclus√£o de registros tamb√©m tenta manter sincroniza√ß√£o com o banco de dados remoto quando o Supabase estiver configurado.
+          Esta ·rea permite que gerentes visualizem o status de toda Checklists, ajustem ativos e removam registros indevidos com seguranÁa.
+          A exclus„o de registros tambÈm tenta manter sincronizaÁ„o com o banco de dados remoto quando o Supabase estiver configurado.
         </p>
       </section>
     </div>
