@@ -61,9 +61,7 @@ export async function syncAnalytics() {
 
     const delTx = db.transaction(STORE_NAME, 'readwrite');
     delTx.objectStore(STORE_NAME).clear();
-  } catch (error) {
-    console.log('Analytics sync failed, will retry later:', error);
-  }
+  } catch {}
 }
 
 window.addEventListener('online', () => syncAnalytics());

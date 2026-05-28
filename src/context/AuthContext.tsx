@@ -21,7 +21,6 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  isMock: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,12 +28,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserSession | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isMock, setIsMock] = useState(false);
 
   useEffect(() => {
     const handleAuthChange = async () => {
       if (isSupabaseConfigured && supabase) {
-        setIsMock(false);
         // Clean session check
         const { data: { session } } = await supabase.auth.getSession();
         if (session && session.user) {
@@ -53,9 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               else if (profile.nivel_acesso === 'gerente') role = 'gerente';
               else role = 'operador';
             }
-          } catch (err) {
-            console.error('Erro ao ler perfil inicial:', err);
-          }
+          } catch {}
 
           setUser({
             email,
@@ -83,9 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 else if (profile.nivel_acesso === 'gerente') role = 'gerente';
                 else role = 'operador';
               }
-            } catch (err) {
-              console.error('Erro ao ler perfil nas alteracoes de autenticacao:', err);
-            }
+            } catch {}
 
             setUser({
               email,
@@ -101,7 +94,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
         return () => subscription.unsubscribe();
       } else {
-        setIsMock(false);
         setLoading(false);
       }
     };
@@ -141,9 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               else if (profile.nivel_acesso === 'gerente') role = 'gerente';
               else role = 'operador';
             }
-          } catch (err) {
-            console.error('Erro ao ler perfil no login:', err);
-          }
+          } catch {}
 
           setUser({
             email: userEmail,
@@ -177,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isMock }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

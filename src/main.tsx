@@ -12,10 +12,8 @@ createRoot(document.getElementById('root')!).render(
 // Register service worker for PWA support (best-effort, silent failure ok)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(() => {
-      console.log('LogiCheck: Service worker registered.');
-    }).catch((err) => {
-      console.warn('LogiCheck: Service worker registration failed.', err);
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Keep registration best-effort and silent in production.
     });
   });
 }

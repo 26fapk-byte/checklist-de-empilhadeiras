@@ -13,7 +13,6 @@ export class RealtimeSync {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'registros_checklist' },
         (payload: any) => {
-          console.log('Real-time update:', payload);
           callback(payload.new as ChecklistRecord);
         }
       )

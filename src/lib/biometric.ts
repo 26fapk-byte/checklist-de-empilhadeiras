@@ -1,6 +1,5 @@
 export async function registerBiometric(): Promise<boolean> {
   if (!window.PublicKeyCredential) {
-    console.log('WebAuthn not supported');
     return false;
   }
 
@@ -9,7 +8,7 @@ export async function registerBiometric(): Promise<boolean> {
       publicKey: {
         challenge: new Uint8Array(32),
         rp: {
-          name: 'LogiCheck',
+          name: 'TKF LogiCheck',
           id: window.location.hostname
         },
         user: {
@@ -33,9 +32,7 @@ export async function registerBiometric(): Promise<boolean> {
       localStorage.setItem('biometric_registered', 'true');
       return true;
     }
-  } catch (error) {
-    console.error('Erro ao registrar biométrico:', error);
-  }
+  } catch {}
 
   return false;
 }
@@ -56,8 +53,7 @@ export async function authenticateWithBiometric(): Promise<boolean> {
     } as any);
 
     return !!assertion;
-  } catch (error) {
-    console.error('Erro na autenticação biométrica:', error);
+  } catch {
     return false;
   }
 }

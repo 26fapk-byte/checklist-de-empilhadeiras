@@ -73,7 +73,6 @@ export default function TeamManagement() {
       .order('email', { ascending: true });
 
     if (error) {
-      console.error('Erro ao buscar colaboradores:', error.message);
       setProfiles([]);
     } else if (data) {
       setProfiles(data as UserProfileRow[]);
@@ -245,7 +244,7 @@ export default function TeamManagement() {
                   pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'E-mail inválido.' }
                 })}
                 className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#1E293B] focus:border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/10"
-                placeholder="nova.pessoa@ativa.com"
+                placeholder="nova.pessoa@tkflogicheck.com"
               />
               {errors.email && <p className="text-[11px] text-red-600">{errors.email.message}</p>}
             </div>
@@ -370,7 +369,7 @@ export default function TeamManagement() {
         </div>
         <p>
           A criação de usuários no frontend integra Supabase Auth e a tabela <code className="rounded bg-white px-1 py-0.5">perfis_usuarios</code>.
-          O papel de gerente só aparece para o master <strong>flavio.frire@ativa.com</strong>. Gerentes comuns criam somente operadores.
+          O papel de gerente só pode ser criado por usuários com nível master. Gerentes comuns criam somente operadores.
         </p>
       </div>
     </div>

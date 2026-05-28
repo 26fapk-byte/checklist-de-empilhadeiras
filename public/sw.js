@@ -1,4 +1,4 @@
-const CACHE_NAME = 'logicheck_cache_v1';
+const CACHE_NAME = 'tkf-logicheck-cache-v2';
 
 const ASSETS_TO_CACHE = [
   '/',
@@ -11,7 +11,6 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('LogiCheck SW: Caching core assets...');
       return cache.addAll(ASSETS_TO_CACHE);
     }).then(() => self.skipWaiting())
   );
@@ -23,7 +22,6 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('LogiCheck SW: Removing old cache', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -66,54 +64,13 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Background Sync
-self.addEventListener('sync', (event) => {
-  console.log('[BG Sync] Event:', event.tag);
-  
-  if (event.tag === 'sync-records') {
-    event.waitUntil(syncPendingRecords());
-  }
-});
-
-async function syncPendingRecords() {
-  try {
-    const db = await indexedDB.open('logicheck', 1);
-    const tx = db.transaction('pendingRecords', 'readonly');
-    const records = await tx.objectStore('pendingRecords').getAll();
-
-    for (const record of records) {
-      const response = await fetch('/api/records', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(record)
-      });
-
-      if (response.ok) {
-        const deleteTx = db.transaction('pendingRecords', 'readwrite');
-        await deleteTx.objectStore('pendingRecords').delete(record.id);
-      }
-    }
-
-    console.log('[BG Sync] ✅ Sincronização completa');
-    self.clients.matchAll().then(clients => {
-      clients.forEach(client => {
-        client.postMessage({ type: 'SYNC_COMPLETE' });
-      });
-    });
-  } catch (error) {
-    console.error('[BG Sync] ❌ Erro:', error);
-    throw error;
-  }
-}
-
-// Push Notifications
 self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? {};
-  const title = data.title || 'LogiCheck Notificação';
+  const title = data.title || 'TKF LogiCheck';
   const options = {
     body: data.body || '',
-    icon: '/manifest.json',
-    badge: 'https://cdn-icons-png.flaticon.com/512/9356/9356230.png',
+    icon: '/icon-192.svg',
+    badge: '/favicon.svg',
     tag: 'logicheck-notification',
     requireInteraction: data.requireInteraction || false,
     data: data.data || {}

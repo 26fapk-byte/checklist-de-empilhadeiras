@@ -22,8 +22,7 @@ export async function uploadToGoogleDrive(
 
     const result = await response.json();
     return result.id;
-  } catch (error) {
-    console.error('Erro ao fazer upload para Google Drive:', error);
+  } catch {
     return null;
   }
 }
@@ -67,8 +66,7 @@ export async function createGoogleSheet(
     );
 
     return spreadsheetId;
-  } catch (error) {
-    console.error('Erro ao criar Google Sheet:', error);
+  } catch {
     return null;
   }
 }

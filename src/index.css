@@ -1,1 +1,66 @@
 @import "tailwindcss";
+
+:root {
+  --tkf-navy-950: #0f172a;
+  --tkf-navy-800: #1e3a8a;
+  --tkf-blue-600: #2563eb;
+  --tkf-amber-500: #f59e0b;
+  --tkf-slate-50: #f8fafc;
+  --tkf-white: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 10% 10%, #dbeafe 0%, var(--tkf-slate-50) 42%, #eef2ff 100%);
+  color: var(--tkf-navy-950);
+  font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@layer components {
+  .tkf-card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .tkf-card-muted {
+    @apply rounded-2xl border border-slate-200 bg-slate-50 shadow-sm;
+  }
+
+  .tkf-title {
+    @apply text-xl font-semibold tracking-tight text-slate-900;
+  }
+
+  .tkf-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500;
+  }
+
+  .tkf-input {
+    @apply h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/15;
+  }
+
+  .tkf-select {
+    @apply h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/15;
+  }
+
+  .tkf-btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-[#1e3a8a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1e40af] active:scale-[0.99] disabled:opacity-60;
+  }
+
+  .tkf-btn-danger {
+    @apply inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700 transition hover:bg-red-100;
+  }
+
+  .tkf-toast {
+    @apply fixed left-1/2 top-4 z-50 w-[92%] max-w-sm -translate-x-1/2 rounded-xl border px-3 py-3 text-xs font-semibold shadow-lg;
+  }
+
+  .tkf-empty {
+    @apply rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500;
+  }
+}

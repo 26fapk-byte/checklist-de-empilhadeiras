@@ -4,11 +4,8 @@ import { ChecklistRecord } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { 
   CheckCircle2, 
-  XCircle, 
   Save, 
-  Check, 
   Sparkles, 
-  AlertTriangle, 
   Clock, 
   Calendar, 
   Truck, 
@@ -17,22 +14,24 @@ import {
   Gauge, 
   Power 
 } from 'lucide-react';
+import StatusToggle from '../components/StatusToggle';
+import { useToast } from '../hooks/useToast';
 
 export default function NewRecord() {
   const { user } = useAuth();
   const equipments = LocalDb.getEquipments();
 
-  // Combine custom logged-in operator if not present in DEFAULT_OPERATORS list
+  // Always include current authenticated user as an available operator.
   const operators = useMemo(() => {
     const list = [...LocalDb.getOperators()];
-    if (user && user.role === 'operador') {
+    if (user) {
       const exists = list.some(op => op.nome.toLowerCase() === user.name.toLowerCase());
       if (!exists) {
         list.push({
-          id: user.id || 'dynamic-user-1',
+          id: user.id || generateUUID(),
           nome: user.name,
-          matricula: 'AH-AUTO',
-          setor: 'Logística Ativa',
+          matricula: 'AUTO',
+          setor: 'Operações',
           ativo: true
         });
       }
@@ -72,10 +71,7 @@ export default function NewRecord() {
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
 
-  // UI notifications
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const { toast, showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Auto-set operator to logged in user if they are an operator
@@ -105,7 +101,7 @@ export default function NewRecord() {
     setItemsStatus(updated);
     
     // Alert the user politely
-    triggerToast(`Todos os 17 atributos marcados como ${status}!`, 'success');
+    showToast(`Todos os 17 atributos marcados como ${status}!`, 'success');
   };
 
   const handleStatusToggle = (key: string, status: 'OK' | 'NOK') => {
@@ -122,25 +118,16 @@ export default function NewRecord() {
     }));
   };
 
-  const triggerToast = (msg: string, type: 'success' | 'error' = 'success') => {
-    setToastMessage(msg);
-    setToastType(type);
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3500);
-  };
-
   // Submit operations
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!operator) {
-      triggerToast('Por favor, selecione o operador responsável.', 'error');
+      showToast('Por favor, selecione o operador responsável.', 'error');
       return;
     }
     if (!equipment) {
-      triggerToast('Por favor, selecione qual veículo está sendo inspecionado.', 'error');
+      showToast('Por favor, selecione qual veículo está sendo inspecionado.', 'error');
       return;
     }
     
@@ -148,7 +135,7 @@ export default function NewRecord() {
     const parsedHorimetroStr = horimetro ? horimetro.toString().trim() : '';
     const parsedHorimetro = Number(parsedHorimetroStr.replace(',', '.'));
     if (!parsedHorimetroStr || isNaN(parsedHorimetro) || parsedHorimetro < 0) {
-      triggerToast('Por favor, digite uma leitura válida de Horímetro.', 'error');
+      showToast('Por favor, digite uma leitura válida de Horímetro.', 'error');
       return;
     }
 
@@ -161,7 +148,7 @@ export default function NewRecord() {
     });
 
     if (hasUnexplainedNok) {
-      triggerToast('Atenção: Descreva a não-conformidade (NOK) no campo de observação.', 'error');
+      showToast('Atenção: Descreva a não-conformidade (NOK) no campo de observação.', 'error');
       return;
     }
 
@@ -223,7 +210,7 @@ export default function NewRecord() {
         navigator.vibrate([100, 50, 100]);
       }
 
-      triggerToast('Checklist de Empilhadeira registrado com sucesso!', 'success');
+      showToast('Checklist de Empilhadeira registrado com sucesso!', 'success');
 
       // Reset Form fields to empty as required
       setEquipment('');
@@ -245,30 +232,28 @@ export default function NewRecord() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (err) {
-      triggerToast('Ocorreu uma falha interna ao salvar o registro.', 'error');
+      showToast('Ocorreu uma falha interna ao salvar o registro.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6 relative">
+    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6 relative pb-24">
       
       {/* Visual Floating Success/Error Alert Toast */}
-      {showToast && (
+      {toast.visible && (
         <div 
-          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 p-4 rounded-xl shadow-lg border flex items-center gap-3 w-[90%] max-w-sm animate-fade-in text-xs font-semibold ${
-            toastType === 'success' 
+          className={`tkf-toast flex items-center gap-3 ${
+            toast.type === 'success' 
               ? 'bg-[#E6F7F8] border-[#1e3a8a] text-[#006970]' 
               : 'bg-[#FFDAD6] border-red-200 text-[#93000a]'
           }`}
         >
-          {toastType === 'success' ? (
+          {toast.type === 'success' ? (
             <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-[#1e3a8a]" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-600" />
-          )}
-          <span>{toastMessage}</span>
+          ) : null}
+          <span>{toast.message}</span>
         </div>
       )}
 
@@ -278,7 +263,7 @@ export default function NewRecord() {
           <span>Novo Registro de Checklist</span>
         </h2>
         <p className="text-xs text-[#6C797B] mt-0.5">
-          Formulário eletrônico rápido em substituição ao papel POP-ESTOQUE v1.
+          Registro operacional digital para a rotina da frota TKF LogiCheck.
         </p>
       </div>
 
@@ -370,7 +355,7 @@ export default function NewRecord() {
                   const cleaned = e.target.value.replace(/[^0-9.,]/g, '');
                   setHorimetro(cleaned);
                 }}
-                className="w-full h-12 px-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#181C1E] focus:outline-none focus:border-[#006970]"
+                className="tkf-input"
               />
             </div>
 
@@ -380,30 +365,7 @@ export default function NewRecord() {
                 <Power className="w-3.5 h-3.5 text-[#1e3a8a]" />
                 <span>Ligando?</span>
               </label>
-              <div className="grid grid-cols-2 gap-1 bg-[#F8FAFC] p-1 rounded-lg border border-[#E2E8F0] h-12">
-                <button
-                  type="button"
-                  onClick={() => setLigando('OK')}
-                  className={`rounded text-xs font-bold transition-all shrink-0 flex items-center justify-center ${
-                    ligando === 'OK' 
-                      ? 'bg-[#E6F7F8] text-[#006970] border border-[#1e3a8a]' 
-                      : 'text-[#6C797B]'
-                  }`}
-                >
-                  SIM
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLigando('NOK')}
-                  className={`rounded text-xs font-bold transition-all shrink-0 flex items-center justify-center ${
-                    ligando === 'NOK' 
-                      ? 'bg-[#003366] text-white' 
-                      : 'text-[#6C797B]'
-                  }`}
-                >
-                  NÃO
-                </button>
-              </div>
+              <StatusToggle value={ligando} onChange={setLigando} />
             </div>
           </div>
 
@@ -482,31 +444,8 @@ export default function NewRecord() {
                     </div>
 
                     {/* Giant toggle buttons */}
-                    <div className="grid grid-cols-2 gap-1 bg-[#F8FAFC] p-1 rounded-lg border border-[#E2E8F0] w-36 h-10 select-none">
-                      <button
-                        type="button"
-                        onClick={() => handleStatusToggle(item.key, 'OK')}
-                        className={`rounded text-xs font-bold transition-all shrink-0 flex items-center justify-center gap-0.5 ${
-                          itemStatus === 'OK'
-                            ? 'bg-[#E6F7F8] text-[#006970] border border-[#1e3a8a]'
-                            : 'text-[#6C797B]'
-                        }`}
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>OK</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleStatusToggle(item.key, 'NOK')}
-                        className={`rounded text-xs font-bold transition-all shrink-0 flex items-center justify-center gap-0.5 ${
-                          itemStatus === 'NOK'
-                            ? 'bg-[#003366] text-white font-bold'
-                            : 'text-[#6C797B]'
-                        }`}
-                      >
-                        <XCircle className="w-3.5 h-3.5" />
-                        <span>NOK</span>
-                      </button>
+                    <div className="w-36">
+                      <StatusToggle value={itemStatus} onChange={(value) => handleStatusToggle(item.key, value)} size="sm" />
                     </div>
                   </div>
 
@@ -557,9 +496,7 @@ export default function NewRecord() {
             <Save className="w-5 h-5" />
             <span>Salvar Checklist Operacional</span>
           </button>
-          <p className="text-center text-[10px] text-[#6C797B] mt-3">
-            Ao salvar, o checklist é registrado localmente e enviado para o painel de BI.
-          </p>
+          <p className="text-center text-[10px] text-[#6C797B] mt-3">Ao salvar, o checklist fica disponível no histórico e no dashboard gerencial.</p>
         </div>
 
       </form>

@@ -16,9 +16,4 @@ export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
-if (!isSupabaseConfigured) {
-  console.info(
-    'PharmaLog Note: Supabase credentials are not configured or are set to defaults in .env. ' +
-    'The app is running in offline-first mode with full local storage persistence (perfect for previewing and mobile usage).'
-  );
-}
+// Keep silent when Supabase env vars are not configured.

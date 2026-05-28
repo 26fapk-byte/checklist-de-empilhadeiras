@@ -2,12 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { LocalDb } from '../lib/db';
 import { 
   Search, 
-  Trash2, 
-  CheckCircle2, 
-  XCircle, 
   ChevronLeft, 
   ChevronRight, 
-  SlidersHorizontal,
   FileSpreadsheet,
   Clock, 
   User, 
@@ -125,7 +121,7 @@ export default function History() {
       const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csvRows.join('\n'));
       const link = document.createElement('a');
       link.setAttribute('href', csvContent);
-      link.setAttribute('download', 'pharmalog_checklists_export.csv');
+      link.setAttribute('download', 'tkf-logicheck-checklists.csv');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -135,12 +131,12 @@ export default function History() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6 pb-24">
       
       {/* Title & Stats summary */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#181C1E] tracking-tight">Histórico de Revisões</h2>
+          <h2 className="tkf-title">Histórico Operacional</h2>
           <p className="text-xs text-[#6C797B] mt-0.5">
             Logs completos de conformidade. Exiba e audite registros rapidamente.
           </p>
@@ -149,7 +145,7 @@ export default function History() {
         {/* Action Export */}
         <button
           onClick={handleExportCSV}
-          className="bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#006970] font-bold text-xs h-10 px-4 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+          className="tkf-btn-primary bg-white border border-[#E2E8F0] text-[#1e3a8a] h-12 px-4 rounded-xl hover:bg-[#F8FAFC] shrink-0"
         >
           <FileSpreadsheet className="w-4 h-4 text-[#1e3a8a]" />
           <span>EXPORTAR HISTÓRICO (CSV)</span>
@@ -157,7 +153,7 @@ export default function History() {
       </div>
 
       {/* Audit filtration panel */}
-      <section className="bg-white border border-[#E2E8F0] p-4 rounded-xl shadow-sm space-y-4">
+      <section className="tkf-card p-4 space-y-4">
         
         {/* Quick Search */}
         <div className="relative">
@@ -172,7 +168,7 @@ export default function History() {
               setCurrentPage(1); // Reset page on query
             }}
             placeholder="Buscar por operador, marca da empilhadeira, item defeituoso..."
-            className="w-full h-11 pl-10 pr-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#181C1E] focus:outline-none focus:border-[#006970] focus:ring-1 focus:ring-[#006970] placeholder-[#6C797B]"
+            className="tkf-input pl-10"
           />
         </div>
 
@@ -188,7 +184,7 @@ export default function History() {
                 setFilterMonth(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#181C1E]"
+              className="tkf-select h-12 text-xs"
             >
               <option value="Todos">Todos os meses</option>
               {months.map(m => (
@@ -208,7 +204,7 @@ export default function History() {
                 setFilterEq(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#181C1E]"
+              className="tkf-select h-12 text-xs"
             >
               <option value="Todos">Todas as empilhadeiras</option>
               {equipments.map(eq => (
@@ -228,7 +224,7 @@ export default function History() {
                 setFilterStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#181C1E]"
+              className="tkf-select h-12 text-xs"
             >
               <option value="Todos">Todos os status</option>
               <option value="OK">OK (Conforme)</option>
@@ -242,7 +238,7 @@ export default function History() {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
-              className="w-full h-10 px-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#181C1E]"
+              className="tkf-select h-12 text-xs"
             >
               <option value="desc">Mais recentes primeiro</option>
               <option value="asc">Mais antigas primeiro</option>
@@ -254,7 +250,7 @@ export default function History() {
       </section>
 
       {/* Main Grid Log View - Mobile Optimized (Cards on mobile, tabular on desktop) */}
-      <section className="bg-[#F4F7F9] sm:bg-white rounded-xl sm:border border-[#E2E8F0] sm:shadow-sm overflow-hidden">
+      <section className="tkf-card overflow-hidden bg-[#F4F7F9] sm:bg-white">
         
         {/* Mobile Grid Layout Cards */}
         <div className="sm:hidden space-y-3">

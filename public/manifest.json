@@ -1,24 +1,24 @@
 {
-  "short_name": "LogiCheck",
-  "name": "LogiCheck - Checklist de Empilhadeiras",
+  "short_name": "TKF LogiCheck",
+  "name": "TKF LogiCheck - Checklist Operacional",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/9356/9356230.png",
-      "type": "image/png",
-      "sizes": "192x192",
+      "src": "/icon-192.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
       "purpose": "any maskable"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/9356/9356230.png",
-      "type": "image/png",
-      "sizes": "512x512",
+      "src": "/icon-512.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
       "purpose": "any maskable"
     }
   ],
   "start_url": "/",
-  "background_color": "#f8fafc",
-  "theme_color": "#1e3a8a",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "display": "standalone",
   "orientation": "portrait",
-  "description": "Sistema PWA moderno, mobile-first e extremamente simples para registro operacional de checklists de empilhadeiras em ambientes hospitalares e logisticos."
+  "description": "PWA enterprise para inspeção digital, checklist operacional e auditoria de ativos logísticos."
 }

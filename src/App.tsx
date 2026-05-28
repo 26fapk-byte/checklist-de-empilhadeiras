@@ -4,12 +4,16 @@ import Navigation from './components/Navigation';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import NewRecord from './pages/NewRecord';
+import PreventiveChecklist from './pages/PreventiveChecklist';
+import BatteryRecharge from './pages/BatteryRecharge';
 import History from './pages/History';
 import TeamManagement from './pages/TeamManagement';
 
 function AppContent() {
   const { user, loading } = useAuth();
-  const [tab, setTab] = useState<'dashboard' | 'new-record' | 'history' | 'team-management'>('new-record');
+  const [tab, setTab] = useState<
+    'dashboard' | 'new-record' | 'preventive-checklist' | 'battery-recharge' | 'history' | 'team-management'
+  >('preventive-checklist');
 
   // Automatically select default screen based on authorization role
   React.useEffect(() => {
@@ -17,7 +21,7 @@ function AppContent() {
       if (user.role === 'gerente' || user.role === 'master') {
         setTab('dashboard');
       } else {
-        setTab('new-record');
+        setTab('preventive-checklist');
       }
     }
   }, [user]);
@@ -27,7 +31,7 @@ function AppContent() {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#f8fafc]">
         <div className="w-10 h-10 border-4 border-[#1e3a8a] border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs font-bold text-[#1e3a8a] uppercase tracking-widest mt-4">Carregando LogiCheck...</p>
+        <p className="text-xs font-bold text-[#1e3a8a] uppercase tracking-widest mt-4">Carregando TKF LogiCheck...</p>
       </div>
     );
   }
@@ -42,6 +46,8 @@ function AppContent() {
     <Navigation currentTab={tab} setTab={setTab}>
       {tab === 'dashboard' && <Dashboard />}
       {tab === 'new-record' && <NewRecord />}
+      {tab === 'preventive-checklist' && <PreventiveChecklist />}
+      {tab === 'battery-recharge' && <BatteryRecharge />}
       {tab === 'history' && <History />}
       {tab === 'team-management' && <TeamManagement />}
     </Navigation>

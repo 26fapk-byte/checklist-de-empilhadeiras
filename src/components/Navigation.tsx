@@ -3,19 +3,21 @@ import { useAuth } from '../context/AuthContext';
 import { LocalDb } from '../lib/db';
 import { 
   LayoutDashboard, 
+  ClipboardCheck,
+  BatteryCharging,
   FilePlus2, 
   ClipboardList, 
   LogOut, 
   Download, 
-  CloudLightning, 
   RefreshCw, 
   Smartphone,
   Users
 } from 'lucide-react';
+import BrandMark from './BrandMark';
 
 interface NavigationProps {
-  currentTab: 'dashboard' | 'new-record' | 'history' | 'team-management';
-  setTab: (tab: 'dashboard' | 'new-record' | 'history' | 'team-management') => void;
+  currentTab: 'dashboard' | 'new-record' | 'preventive-checklist' | 'battery-recharge' | 'history' | 'team-management';
+  setTab: (tab: 'dashboard' | 'new-record' | 'preventive-checklist' | 'battery-recharge' | 'history' | 'team-management') => void;
   children: React.ReactNode;
 }
 
@@ -59,7 +61,9 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`PWA Installation outcome: ${outcome}`);
+    if (outcome !== 'accepted') {
+      sessionStorage.setItem('pwa_banner_dismissed', 'true');
+    }
     setDeferredPrompt(null);
     setShowInstallBanner(false);
   };
@@ -77,62 +81,59 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-[#181C1E] font-sans">
+    <div className="min-h-screen flex flex-col bg-transparent text-[#0f172a] font-sans">
 
       {/* Top clean header */}
-      <header className="sticky top-0 z-40 w-full bg-white border-b border-[#E2E8F0] h-14 px-4 flex justify-between items-center shadow-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-[#EBF5FF] flex items-center justify-center border border-[#3B82F6]">
-            <CloudLightning className="w-4.5 h-4.5 text-[#1D4ED8]" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-[#1E293B] leading-tight select-none">LogiCheck</h1>
-            <p className="text-[9px] uppercase font-bold text-[#3B82F6] leading-none tracking-wider">SaaS Logística</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Offline Sync Status Pill */}
-          {syncCount > 0 && (
-            <button
-              onClick={handleSync}
-              disabled={syncing}
-              title="Sincronizar dados pendentes com o Supabase"
-              className="flex items-center gap-1.5 bg-[#FFDAD6] text-[#93000a] px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide border border-red-200 animate-pulse hover:bg-red-250 cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} />
-              <span>{syncCount} pendentes</span>
-            </button>
-          )}
-
-          {/* Active Operator Pill */}
-          {user && (
-            <div className="flex items-center gap-2 border-l border-[#E2E8F0] pl-3">
-              <div className="text-right">
-                <p className="text-xs font-semibold text-[#181C1E] max-w-[110px] truncate select-none">{user.name}</p>
-                <p className="text-[9px] text-[#1E293B] font-bold leading-none select-none">
-                  {user.role === 'gerente' || user.role === 'master' ? 'Gestão / Supervisor' : 'Operador Logístico'}
-                </p>
-              </div>
-              <button
-                onClick={logout}
-                title="Efetuar Logoff"
-                className="w-8 h-8 rounded-full border border-[#E2E8F0] hover:bg-[#F8FAFC] flex items-center justify-center text-[#6C797B] hover:text-[#BA1A1A] transition-colors cursor-pointer"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/85 px-4 py-3 backdrop-blur">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <BrandMark compact />
+            <div>
+              <h1 className="text-sm font-semibold leading-tight text-[#0f172a] select-none">TKF LogiCheck</h1>
+              <p className="text-[10px] uppercase font-semibold text-[#2563eb] tracking-[0.14em]">Enterprise Operations</p>
             </div>
-          )}
+          </div>
+          <div className="flex items-center gap-3">
+            {syncCount > 0 && (
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                title="Sincronizar dados pendentes com o Supabase"
+                className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} />
+                <span>{syncCount} pendentes</span>
+              </button>
+            )}
+
+            {user && (
+              <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
+                <div className="text-right">
+                  <p className="max-w-[120px] truncate text-xs font-semibold text-[#0f172a]">{user.name}</p>
+                  <p className="text-[9px] font-semibold leading-none text-slate-500">
+                    {user.role === 'gerente' || user.role === 'master' ? 'Gestão' : 'Operação'}
+                  </p>
+                </div>
+                <button
+                  onClick={logout}
+                  title="Efetuar Logoff"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-red-700"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* PWA Mobile App Installation Prompt Banner */}
       {showInstallBanner && deferredPrompt && (
-        <div className="bg-[#0F172A] text-white px-4 py-3 flex items-center justify-between gap-3 text-xs border-b border-[#1E293B] animate-fade-in relative z-30">
+        <div className="relative z-30 flex items-center justify-between gap-3 border-b border-[#1e3a8a]/30 bg-[#0f172a] px-4 py-3 text-xs text-white">
           <div className="flex items-center gap-2.5">
             <Smartphone className="w-5 h-5 text-[#93C5FD] shrink-0" />
             <div>
-              <p className="font-bold">Instalar LogiCheck no Celular</p>
+              <p className="font-bold">Instalar TKF LogiCheck</p>
               <p className="text-[#94A3B8] text-[10px]">Acesso rápido, offline e melhor uso em campo.</p>
             </div>
           </div>
@@ -160,11 +161,12 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
       </main>
 
       {/* Primary Mobile Touchbar: Fixed to screen bottom, minimal, large tap points of 48px */}
-      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-[#E2E8F0] shadow-[0_-2px_8px_rgba(0,0,0,0.03)] flex justify-around items-center z-40">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 h-16 border-t border-slate-200 bg-white/95 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur">
+        <div className="flex h-full items-center overflow-x-auto px-1">
         {(user?.role === 'gerente' || user?.role === 'master') && (
           <button
             onClick={() => setTab('dashboard')}
-            className={`flex-1 h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'dashboard'
+            className={`min-w-[70px] h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'dashboard'
                 ? 'text-[#1E3A8A] font-semibold'
                 : 'text-[#6C797B] hover:text-[#1E3A8A]'
               }`}
@@ -177,8 +179,21 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
         )}
 
         <button
+          onClick={() => setTab('preventive-checklist')}
+          className={`min-w-[76px] h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'preventive-checklist'
+              ? 'text-[#1E3A8A] font-semibold'
+              : 'text-[#6C797B] hover:text-[#1E3A8A]'
+            }`}
+        >
+          <div className={`p-1 rounded-md transition-colors ${currentTab === 'preventive-checklist' ? 'bg-[#EBF5FF]' : ''}`}>
+            <ClipboardCheck className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] tracking-wide">Preventivo</span>
+        </button>
+
+        <button
           onClick={() => setTab('new-record')}
-          className={`flex-1 h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'new-record'
+          className={`min-w-[76px] h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'new-record'
               ? 'text-[#1E3A8A] font-semibold'
               : 'text-[#6C797B] hover:text-[#1E3A8A]'
             }`}
@@ -190,8 +205,21 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
         </button>
 
         <button
+          onClick={() => setTab('battery-recharge')}
+          className={`min-w-[76px] h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'battery-recharge'
+              ? 'text-[#1E3A8A] font-semibold'
+              : 'text-[#6C797B] hover:text-[#1E3A8A]'
+            }`}
+        >
+          <div className={`p-1 rounded-md transition-colors ${currentTab === 'battery-recharge' ? 'bg-[#EBF5FF]' : ''}`}>
+            <BatteryCharging className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] tracking-wide">Bateria</span>
+        </button>
+
+        <button
           onClick={() => setTab('history')}
-          className={`flex-1 h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'history'
+          className={`min-w-[70px] h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'history'
               ? 'text-[#1E3A8A] font-semibold'
               : 'text-[#6C797B] hover:text-[#1E3A8A]'
             }`}
@@ -205,7 +233,7 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
         {(user?.role === 'gerente' || user?.role === 'master') && (
           <button
             onClick={() => setTab('team-management')}
-            className={`flex-1 h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'team-management'
+            className={`min-w-[70px] h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${currentTab === 'team-management'
                 ? 'text-[#1E3A8A] font-semibold'
                 : 'text-[#6C797B] hover:text-[#1E3A8A]'
               }`}
@@ -216,6 +244,7 @@ export default function Navigation({ currentTab, setTab, children }: NavigationP
             <span className="text-[10px] tracking-wide font-medium">Equipe</span>
           </button>
         )}
+        </div>
       </nav>
 
     </div>

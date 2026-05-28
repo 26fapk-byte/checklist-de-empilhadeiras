@@ -1,6 +1,5 @@
 export async function requestNotificationPermission() {
   if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
     return false;
   }
 
@@ -18,7 +17,6 @@ export async function requestNotificationPermission() {
 
 export async function subscribeToNotifications() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.error('Push notifications not supported');
     return null;
   }
 
@@ -39,8 +37,7 @@ export async function subscribeToNotifications() {
     });
 
     return subscription;
-  } catch (error) {
-    console.error('Falha ao se inscrever em notificações:', error);
+  } catch {
     return null;
   }
 }
@@ -48,8 +45,8 @@ export async function subscribeToNotifications() {
 export function showNotification(title: string, options?: NotificationOptions) {
   if ('Notification' in window && Notification.permission === 'granted') {
     return new Notification(title, {
-      icon: '/manifest.json',
-      badge: 'https://cdn-icons-png.flaticon.com/512/9356/9356230.png',
+      icon: '/icon-192.svg',
+      badge: '/favicon.svg',
       ...options
     });
   }
