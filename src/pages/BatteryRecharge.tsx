@@ -1,15 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { BatteryCharging, Clock3, Droplets, Gauge, Wrench } from 'lucide-react';
-import { LocalDb, generateUUID } from '../lib/db';
+import { LocalDb, generateUUID, getEquipmentsFromSupabase } from '../lib/db';
 import { useAuth } from '../context/AuthContext';
-import { BatteryRechargeRecord } from '../types';
+import { BatteryRechargeRecord, Equipment } from '../types';
 import StatusToggle from '../components/StatusToggle';
 import SignatureField from '../components/SignatureField';
 import { useToast } from '../hooks/useToast';
 
 export default function BatteryRecharge() {
   const { user } = useAuth();
-  const equipments = LocalDb.getEquipments();
+  const [equipments, setEquipments] = useState<Equipment[]>([]);
   const { toast, showToast } = useToast();
 
   const [patrimonio, setPatrimonio] = useState('');
@@ -24,6 +24,16 @@ export default function BatteryRecharge() {
   const [observacoes, setObservacoes] = useState('');
   const [signatureName, setSignatureName] = useState(user?.name || '');
   const [signatureAccepted, setSignatureAccepted] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const data = await getEquipmentsFromSupabase();
+      if (active) setEquipments(data);
+    }
+    load();
+    return () => { active = false; };
+  }, []);
 
   const latest = useMemo(() => LocalDb.getBatteryRechargeRecords().slice(0, 4), [toast.visible]);
 
@@ -67,101 +77,111 @@ export default function BatteryRecharge() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5 px-4 py-5 pb-24">
+    <div className="mx-auto max-w-3xl space-y-5 px-4 py-5 pb-24 text-white">
       {toast.visible && (
-        <div className={`fixed left-1/2 top-4 z-50 w-[90%] max-w-sm -translate-x-1/2 rounded-xl border px-3 py-3 text-xs font-semibold shadow-lg ${toast.type === 'success' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-red-300 bg-red-50 text-red-700'}`}>
+        <div className={`tkf-toast flex items-center justify-center text-center ${toast.type === 'success' ? 'border-emerald-500 bg-[#0e131f] text-emerald-300' : 'border-red-500 bg-[#0e131f] text-red-300'}`}>
           {toast.message}
         </div>
       )}
 
-      <section className="rounded-3xl border border-white/10 bg-[#111827] p-5 text-white shadow-[0_20px_45px_rgba(17,24,39,0.45)]">
+      <header className="rounded-3xl border border-white/10 bg-[#0e131f] p-5 shadow-[0_20px_45px_rgba(14,19,31,0.5)]">
         <div className="flex items-start gap-3">
           <BatteryCharging className="mt-1 h-5 w-5 text-[#f59e0b]" />
           <div>
-            <h2 className="text-lg font-semibold">Abastecimento de Água e Recarga da Bateria</h2>
-            <p className="mt-1 text-xs text-slate-300">Registro operacional de ciclo completo de carregamento e manutenção da bateria.</p>
+            <h2 className="text-lg font-semibold tracking-tight">Abastecimento de Água e Recarga da Bateria</h2>
+            <p className="mt-1 text-xs text-slate-400">Registro operacional de ciclo completo de carregamento e manutenção da bateria.</p>
           </div>
         </div>
-      </section>
+      </header>
 
-      <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Patrimônio</label>
-        <select value={patrimonio} onChange={(event) => setPatrimonio(event.target.value)} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm">
-          <option value="">Selecionar equipamento</option>
-          {equipments.map((eq) => (
-            <option key={eq.id} value={eq.patrimonio}>{eq.patrimonio} - {eq.nome}</option>
-          ))}
-        </select>
+      <section className="tkf-card p-4 space-y-4">
+        <div>
+          <label className="tkf-label">Patrimônio</label>
+          <select value={patrimonio} onChange={(event) => setPatrimonio(event.target.value)} className="tkf-select mt-1.5">
+            <option value="">Selecionar equipamento</option>
+            {equipments.map((eq) => (
+              <option key={eq.id} value={eq.patrimonio}>{eq.patrimonio} - {eq.nome}</option>
+            ))}
+          </select>
+        </div>
 
-        <label className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500"><Gauge className="h-3.5 w-3.5" /> Horímetro</label>
-        <input value={horimetro} onChange={(event) => setHorimetro(event.target.value.replace(/[^0-9.,]/g, ''))} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm" placeholder="Ex: 1320,0" />
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Início operador</label>
-            <input value={inicioOperador} onChange={(event) => setInicioOperador(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm" />
-          </div>
-          <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Término operador</label>
-            <input value={terminoOperador} onChange={(event) => setTerminoOperador(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm" />
-          </div>
+        <div>
+          <label className="flex items-center gap-1 tkf-label">
+            <Gauge className="h-3.5 w-3.5 text-[#f59e0b]" /> Horímetro
+          </label>
+          <input value={horimetro} onChange={(event) => setHorimetro(event.target.value.replace(/[^0-9.,]/g, ''))} className="tkf-input mt-1.5" placeholder="Ex: 1320,0" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500"><Clock3 className="h-3.5 w-3.5" /> Hora início</label>
-            <input type="time" value={horaInicio} onChange={(event) => setHoraInicio(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm" />
+            <label className="tkf-label">Início operador</label>
+            <input value={inicioOperador} onChange={(event) => setInicioOperador(event.target.value)} className="tkf-input mt-1.5" />
           </div>
           <div>
-            <label className="mb-1 flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500"><Clock3 className="h-3.5 w-3.5" /> Hora término</label>
-            <input type="time" value={horaTermino} onChange={(event) => setHoraTermino(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm" />
+            <label className="tkf-label">Término operador</label>
+            <input value={terminoOperador} onChange={(event) => setTerminoOperador(event.target.value)} className="tkf-input mt-1.5" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="flex items-center gap-1 tkf-label">
+              <Clock3 className="h-3.5 w-3.5 text-[#f59e0b]" /> Hora início
+            </label>
+            <input type="time" value={horaInicio} onChange={(event) => setHoraInicio(event.target.value)} className="tkf-input mt-1.5 text-center" />
+          </div>
+          <div>
+            <label className="flex items-center gap-1 tkf-label">
+              <Clock3 className="h-3.5 w-3.5 text-[#f59e0b]" /> Hora término
+            </label>
+            <input type="time" value={horaTermino} onChange={(event) => setHoraTermino(event.target.value)} className="tkf-input mt-1.5 text-center" />
           </div>
         </div>
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Situação do carregador</label>
+      <section className="tkf-card p-4 space-y-4">
+        <div className="flex items-center justify-between border-b border-white/5 pb-3">
+          <label className="tkf-label">Situação do carregador</label>
           <div className="w-36"><StatusToggle value={carregadorStatus} onChange={setCarregadorStatus} size="sm" /></div>
         </div>
 
-        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium text-slate-700">
-          <Droplets className="h-4 w-4 text-[#1e3a8a]" />
-          <input type="checkbox" checked={reposicaoAgua} onChange={(event) => setReposicaoAgua(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#2563eb]" />
+        <label className="flex items-center gap-3 rounded-xl border border-white/5 bg-[#131a2c]/40 px-3 py-3 text-sm font-medium text-slate-300">
+          <Droplets className="h-4 w-4 text-[#4364f7]" />
+          <input type="checkbox" checked={reposicaoAgua} onChange={(event) => setReposicaoAgua(event.target.checked)} className="h-4 w-4 rounded border-white/10 bg-[#0e131f] text-[#4364f7] focus:ring-[#4364f7]" />
           Reposição de água executada
         </label>
 
         {reposicaoAgua && (
-          <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Responsável pela reposição</label>
-            <input value={responsavelReposicao} onChange={(event) => setResponsavelReposicao(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm" />
+          <div className="space-y-1.5">
+            <label className="tkf-label">Responsável pela reposição</label>
+            <input value={responsavelReposicao} onChange={(event) => setResponsavelReposicao(event.target.value)} className="tkf-input mt-1" />
           </div>
         )}
 
-        <div>
-          <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Observações</label>
-          <textarea value={observacoes} onChange={(event) => setObservacoes(event.target.value)} rows={3} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
+        <div className="space-y-1.5">
+          <label className="tkf-label">Observações</label>
+          <textarea value={observacoes} onChange={(event) => setObservacoes(event.target.value)} rows={3} className="w-full rounded-xl border border-white/10 bg-[#131a2c] px-3 py-2 text-sm text-white focus:border-[#4364f7] outline-none" placeholder="Relatar observações ou incidentes técnicos..." />
         </div>
       </section>
 
       <SignatureField signerName={signatureName} acknowledged={signatureAccepted} onSignerNameChange={setSignatureName} onAcknowledgedChange={setSignatureAccepted} />
 
-      <button onClick={handleSave} className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#1e3a8a] text-sm font-bold text-white shadow-[0_12px_28px_rgba(30,58,138,0.35)] transition hover:bg-[#1e40af]">
+      <button onClick={handleSave} className="tkf-btn-primary w-full h-14 flex items-center justify-center gap-2 cursor-pointer text-sm font-bold uppercase tracking-wider">
         <Wrench className="h-4 w-4" />
         Salvar Ciclo de Recarga
       </button>
 
-      <section className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Últimos ciclos registrados</h3>
+      <section className="tkf-card p-4 space-y-3">
+        <h3 className="tkf-label">Últimos ciclos registrados</h3>
         {latest.length === 0 ? (
-          <p className="text-xs text-slate-500">Nenhum ciclo de recarga registrado.</p>
+          <p className="text-xs text-slate-400">Nenhum ciclo de recarga registrado.</p>
         ) : latest.map((entry) => (
-          <div key={entry.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs">
+          <div key={entry.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-[#131a2c]/30 px-3 py-2 text-xs">
             <div>
-              <p className="font-semibold text-slate-800">{entry.patrimonio}</p>
-              <p className="text-slate-500">{entry.hora_inicio} - {entry.hora_termino}</p>
+              <p className="font-semibold text-slate-200">{entry.patrimonio}</p>
+              <p className="text-slate-400">{entry.hora_inicio} - {entry.hora_termino}</p>
             </div>
-            <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${entry.carregador_status === 'OK' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{entry.carregador_status}</span>
+            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold border ${entry.carregador_status === 'OK' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'}`}>{entry.carregador_status}</span>
           </div>
         ))}
       </section>

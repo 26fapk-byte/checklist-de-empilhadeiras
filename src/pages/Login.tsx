@@ -52,10 +52,10 @@ export default function Login() {
         <div className="grid w-full items-center gap-10 rounded-[32px] border border-white/10 bg-[#0b1222]/85 p-6 shadow-[0_30px_80px_rgba(2,6,23,0.55)] backdrop-blur md:grid-cols-2 md:p-10">
           <section className="space-y-5">
             <BrandMark />
-            <h2 className="max-w-md text-3xl font-semibold leading-tight text-white">
+            <h2 className="max-w-md text-2xl md:text-3xl font-bold tracking-tight leading-tight text-white">
               Inspeção inteligente para operações logísticas de alta criticidade.
             </h2>
-            <p className="max-w-md text-sm leading-relaxed text-slate-300">
+            <p className="max-w-md text-xs md:text-sm text-slate-400 font-light leading-relaxed">
               Plataforma SaaS corporativa para checklist operacional de empilhadeiras e equipamentos com rastreabilidade, auditoria e resposta em tempo real.
             </p>
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-300">

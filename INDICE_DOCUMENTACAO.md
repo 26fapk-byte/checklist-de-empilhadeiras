@@ -1,4 +1,4 @@
-# 📚 ÍNDICE COMPLETO DE DOCUMENTAÇÃO - PHARMALOG
+# 📚 ÍNDICE COMPLETO DE DOCUMENTAÇÃO - TKF LOGICHECK
 
 > 🎯 **Comece por aqui!** Este arquivo lista todos os documentos criados para entender e trabalhar com o projeto LogiCheck.
 
@@ -169,7 +169,7 @@ Cada feature inclui:
 
 ### Credenciais
 ```
-MASTER: flavio@ativa.com / 123456
+MASTER: flavio@tkf.com / 123456
 Supabase: https://mctomstklskmejxozoys.supabase.co
 ANON KEY: sb_publishable_V9Ge0j9JJSnvVK16kSGDmw_2xfdRbKl
 ```
@@ -315,8 +315,8 @@ Por favor, mantenha o código limpo e bem estruturado.
 
 ## 📞 INFORMAÇÕES ADICIONAIS
 
-**Projeto:** LogiCheck / PharmaLog  
-**Empresa:** Ativa Hospitalar  
+**Projeto:** TKF LogiCheck  
+**Empresa:** TKF  
 **Status:** Production-ready (localhost) → Vercel  
 **Stack:** React 19 + Supabase + PWA  
 **Última Atualização:** Dezembro 2026  

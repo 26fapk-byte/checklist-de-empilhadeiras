@@ -4,8 +4,8 @@ import { isSupabaseConfigured, supabase } from '../lib/supabase';
 // Role detection helper based on email string (produces Portuguese role labels)
 const getRoleFromEmail = (email: string): 'master' | 'gerente' | 'operador' => {
   const normalized = email.toLowerCase().trim();
-  if (normalized === 'flavio.frire@ativa.com') return 'master';
-  if (normalized.endsWith('@ativa.com')) return 'gerente';
+  if (normalized === 'flavio.frire@ativa.com' || normalized === 'flavio.freire@tkf.com' || normalized === 'flavio@tkf.com') return 'master';
+  if (normalized.endsWith('@ativa.com') || normalized.endsWith('@tkf.com')) return 'gerente';
   return 'operador';
 };
 

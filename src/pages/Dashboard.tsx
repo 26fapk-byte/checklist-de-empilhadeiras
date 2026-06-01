@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
-import { LocalDb } from '../lib/db';
+import React, { useEffect, useMemo, useState } from 'react';
+import { LocalDb, generateUUID, getEquipmentsFromSupabase, addEquipmentToSupabase, removeEquipmentFromSupabase } from '../lib/db';
 import { ChecklistRecord, Equipment } from '../types';
 import {
   Truck,
@@ -14,7 +14,6 @@ import {
   CircleDot,
   Activity
 } from 'lucide-react';
-import { generateUUID } from '../lib/db';
 import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
@@ -29,9 +28,14 @@ export default function Dashboard() {
   const [equipmentType, setEquipmentType] = useState('');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const loadData = () => {
+  const loadData = async () => {
     setRecords(LocalDb.getRecords());
-    setEquipments(LocalDb.getEquipments());
+    try {
+      const data = await getEquipmentsFromSupabase();
+      setEquipments(data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -142,7 +146,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleCreateEquipment = () => {
+  const handleCreateEquipment = async () => {
     if (!equipmentName.trim() || !equipmentPatrimonio.trim() || !equipmentType.trim()) {
       setNotification({ message: 'Preencha todos os campos do cadastro de equipamento.', type: 'error' });
       return;
@@ -154,18 +158,26 @@ export default function Dashboard() {
       tipo: equipmentType.trim(),
       ativo: true
     };
-    LocalDb.addEquipment(newEquipment);
-    setEquipmentName('');
-    setEquipmentPatrimonio('');
-    setEquipmentType('');
-    setNotification({ message: 'Equipamento cadastrado com sucesso.', type: 'success' });
-    loadData();
+    try {
+      await addEquipmentToSupabase(newEquipment);
+      setEquipmentName('');
+      setEquipmentPatrimonio('');
+      setEquipmentType('');
+      setNotification({ message: 'Equipamento cadastrado com sucesso.', type: 'success' });
+      await loadData();
+    } catch (err) {
+      setNotification({ message: 'Não foi possível cadastrar no Supabase.', type: 'error' });
+    }
   };
 
-  const handleRemoveEquipment = (id: string) => {
-    LocalDb.removeEquipment(id);
-    setNotification({ message: 'Equipamento removido da frota.', type: 'success' });
-    loadData();
+  const handleRemoveEquipment = async (id: string) => {
+    try {
+      await removeEquipmentFromSupabase(id);
+      setNotification({ message: 'Equipamento removido da frota.', type: 'success' });
+      await loadData();
+    } catch (err) {
+      setNotification({ message: 'Não foi possível remover no Supabase.', type: 'error' });
+    }
   };
 
   useEffect(() => {
