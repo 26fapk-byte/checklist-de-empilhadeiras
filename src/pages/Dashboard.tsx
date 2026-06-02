@@ -194,11 +194,11 @@ export default function Dashboard() {
       )}
 
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-         <div>
-           <h1 className="tkf-title">Painel Operacional Enterprise</h1>
-           <p className="text-sm text-[#475569] max-w-2xl mt-1">Visão gerencial de produtividade, ativos e auditorias da operação TKF LogiCheck.</p>
-         </div>
-       </div>
+        <div>
+          <h1 className="tkf-title">Painel Operacional Enterprise</h1>
+          <p className="text-sm text-[#475569] max-w-2xl mt-1">Visão gerencial de produtividade, ativos e auditorias da operação TKF LogiCheck.</p>
+        </div>
+      </div>
 
       <section className="tkf-card p-4 grid gap-3 sm:grid-cols-3">
         <div>
