@@ -1,25 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { LocalDb } from '../lib/db';
+import { LocalDb, generateUUID, getEquipmentsFromSupabase, addEquipmentToSupabase, removeEquipmentFromSupabase } from '../lib/db';
 import { ChecklistRecord, Equipment } from '../types';
 import {
-  Activity,
-  ClipboardCheck,
   Truck,
-  Users,
-  ShieldCheck,
   AlertCircle,
   Trash2,
   Plus,
   Info,
-  Gauge,
-  Battery,
   CheckCircle2,
   Clock,
-  Calendar,
   User,
-  ShieldAlert
+  Siren,
+  CircleDot,
+  Activity
 } from 'lucide-react';
-import { generateUUID } from '../lib/db';
 import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
@@ -34,9 +28,14 @@ export default function Dashboard() {
   const [equipmentType, setEquipmentType] = useState('');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const loadData = () => {
+  const loadData = async () => {
     setRecords(LocalDb.getRecords());
-    setEquipments(LocalDb.getEquipments());
+    try {
+      const data = await getEquipmentsFromSupabase();
+      setEquipments(data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -76,6 +75,15 @@ export default function Dashboard() {
 
   const totalOk = useMemo(() => records.filter((record) => record.status === 'OK').length, [records]);
   const totalNok = useMemo(() => records.filter((record) => record.status === 'NOK').length, [records]);
+  const today = new Date().toISOString().slice(0, 10);
+  const checklistsToday = useMemo(() => {
+    const keys = new Set(
+      records
+        .filter((record) => record.data === today)
+        .map((record) => `${record.data}_${record.hora}_${record.equipamento}`)
+    );
+    return keys.size;
+  }, [records, today]);
 
   const equipmentHealth = useMemo(() => {
     return equipments.map((equipment) => {
@@ -86,7 +94,7 @@ export default function Dashboard() {
         ...equipment,
         lastInspection: latest ? `${latest.data.split('-').reverse().join('/')} ${latest.hora}` : 'Sem registro',
         lastOperator: latest?.operador ?? 'Sem operador',
-        status: latest ? (failedItems.length > 0 ? 'NOK' : 'OK') : 'Sem inspeÁ„o',
+        status: latest ? (failedItems.length > 0 ? 'NOK' : 'OK') : 'Sem inspe√ß√£o',
         failedItems
       };
     });
@@ -104,23 +112,40 @@ export default function Dashboard() {
       .slice(0, 6);
   }, [records]);
 
+  const recurringFailures = useMemo(() => {
+    const failures: Record<string, number> = {};
+    records.forEach((record) => {
+      if (record.status === 'NOK') {
+        failures[record.item] = (failures[record.item] || 0) + 1;
+      }
+    });
+    return Object.entries(failures)
+      .map(([item, count]) => ({ item, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [records]);
+
+  const criticalEquipments = useMemo(
+    () => equipmentHealth.filter((item) => item.status === 'NOK').slice(0, 5),
+    [equipmentHealth]
+  );
+
   const handleDeleteRecord = (id: string) => {
-    // Permission check: Only gerente/master can delete
     if (!user || (user.role !== 'gerente' && user.role !== 'master')) {
-      setNotification({ message: 'VocÍ n„o tem permiss„o para excluir registros.', type: 'error' });
+      setNotification({ message: 'Voc√™ n√£o tem permiss√£o para excluir registros.', type: 'error' });
       return;
     }
 
     const success = LocalDb.deleteRecord(id);
     if (success) {
-      setNotification({ message: 'Registro excluÌdo com sucesso.', type: 'success' });
+      setNotification({ message: 'Registro exclu√≠do com sucesso.', type: 'success' });
       loadData();
     } else {
-      setNotification({ message: 'N„o foi possÌvel excluir o registro. Tente novamente.', type: 'error' });
+      setNotification({ message: 'N√£o foi poss√≠vel excluir o registro. Tente novamente.', type: 'error' });
     }
   };
 
-  const handleCreateEquipment = () => {
+  const handleCreateEquipment = async () => {
     if (!equipmentName.trim() || !equipmentPatrimonio.trim() || !equipmentType.trim()) {
       setNotification({ message: 'Preencha todos os campos do cadastro de equipamento.', type: 'error' });
       return;
@@ -132,18 +157,26 @@ export default function Dashboard() {
       tipo: equipmentType.trim(),
       ativo: true
     };
-    LocalDb.addEquipment(newEquipment);
-    setEquipmentName('');
-    setEquipmentPatrimonio('');
-    setEquipmentType('');
-    setNotification({ message: 'Equipamento cadastrado com sucesso.', type: 'success' });
-    loadData();
+    try {
+      await addEquipmentToSupabase(newEquipment);
+      setEquipmentName('');
+      setEquipmentPatrimonio('');
+      setEquipmentType('');
+      setNotification({ message: 'Equipamento cadastrado com sucesso.', type: 'success' });
+      await loadData();
+    } catch (err) {
+      setNotification({ message: 'N√£o foi poss√≠vel cadastrar no Supabase.', type: 'error' });
+    }
   };
 
-  const handleRemoveEquipment = (id: string) => {
-    LocalDb.removeEquipment(id);
-    setNotification({ message: 'Equipamento removido da Checklists.', type: 'success' });
-    loadData();
+  const handleRemoveEquipment = async (id: string) => {
+    try {
+      await removeEquipmentFromSupabase(id);
+      setNotification({ message: 'Equipamento removido da frota.', type: 'success' });
+      await loadData();
+    } catch (err) {
+      setNotification({ message: 'N√£o foi poss√≠vel remover no Supabase.', type: 'error' });
+    }
   };
 
   useEffect(() => {
@@ -153,28 +186,68 @@ export default function Dashboard() {
   }, [notification]);
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 pb-24">
       {notification && (
-        <div className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${notification.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-red-50 border-red-200 text-red-900'}`}>
+        <div className={`tkf-toast ${notification.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-red-50 border-red-200 text-red-900'}`}>
           {notification.message}
         </div>
       )}
 
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+         <div>
+           <h1 className="tkf-title">Painel Operacional Enterprise</h1>
+           <p className="text-sm text-[#475569] max-w-2xl mt-1">Vis√£o gerencial de produtividade, ativos e auditorias da opera√ß√£o TKF LogiCheck.</p>
+         </div>
+       </div>
+
+      <section className="tkf-card p-4 grid gap-3 sm:grid-cols-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#1F2937]">Painel Administrativo</h1>
-          <p className="text-sm text-[#475569] max-w-2xl mt-1">Vis„o gerencial de produtividade, ativos e auditorias para a Checklists LogiCheck.</p>
+          <label className="tkf-label">Per√≠odo</label>
+          <select value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)} className="tkf-select mt-1">
+            <option value="Todos">Todos os meses</option>
+            {months.map((month) => (
+              <option key={month} value={month}>
+                {month.split('-')[1]}/{month.split('-')[0]}
+              </option>
+            ))}
+          </select>
         </div>
-      </div>
+        <div>
+          <label className="tkf-label">Ativo</label>
+          <select value={selectedEq} onChange={(event) => setSelectedEq(event.target.value)} className="tkf-select mt-1">
+            <option value="Todos">Todos os ativos</option>
+            {equipments.map((eq) => (
+              <option key={eq.id} value={eq.patrimonio}>{eq.patrimonio}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="tkf-label">Status</label>
+          <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)} className="tkf-select mt-1">
+            <option value="Todos">Todos</option>
+            <option value="OK">OK</option>
+            <option value="NOK">NOK</option>
+          </select>
+        </div>
+      </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">InspeÁıes totais</p>
+        <article className="tkf-card p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Inspe√ß√µes totais</p>
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{totalInspections}</h2>
-          <p className="mt-2 text-xs text-[#475569]">Contagem de checklists ˙nicos enviados hoje e no histÛrico.</p>
+          <p className="mt-2 text-xs text-[#475569]">Contagem de checklists √∫nicos enviados hoje e no hist√≥rico.</p>
         </article>
 
-        <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+        <article className="tkf-card p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Checklists do dia</p>
+          <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{checklistsToday}</h2>
+          <div className="mt-2 flex items-center gap-2 text-xs text-[#1D4ED8]">
+            <Activity className="w-4 h-4" />
+            <span>Movimento operacional hoje</span>
+          </div>
+        </article>
+
+        <article className="tkf-card p-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Status OK</p>
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{totalOk}</h2>
           <div className="mt-2 flex items-center gap-2 text-xs text-[#047857]">
@@ -183,17 +256,17 @@ export default function Dashboard() {
           </div>
         </article>
 
-        <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+        <article className="tkf-card p-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Status NOK</p>
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{totalNok}</h2>
           <div className="mt-2 flex items-center gap-2 text-xs text-[#881337]">
             <AlertCircle className="w-4 h-4" />
-            <span>Registros com n„o conformidades</span>
+            <span>Registros com n√£o conformidades</span>
           </div>
         </article>
 
         <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">M·quinas ativas</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">M√°quinas ativas</p>
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{equipments.length}</h2>
           <div className="mt-2 flex items-center gap-2 text-xs text-[#1D4ED8]">
             <Truck className="w-4 h-4" />
@@ -203,7 +276,7 @@ export default function Dashboard() {
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[1.4fr_0.9fr]">
-        <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+        <article className="tkf-card p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Ranking de Produtividade</p>
@@ -216,13 +289,13 @@ export default function Dashboard() {
 
           <div className="mt-5 space-y-3">
             {operatorRanking.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">Ainda n„o h· registros suficientes.</div>
+              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">Ainda n√£o h√° registros suficientes.</div>
             ) : (
               operatorRanking.map((entry, index) => (
-                <div key={entry.operador} className="flex items-center justify-between rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+              <div key={entry.operador} className="flex items-center justify-between rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
                   <div>
                     <p className="text-sm font-semibold text-[#0F172A]">{entry.operador}</p>
-                    <p className="text-[11px] text-[#64748B]">AÁıes registradas</p>
+                    <p className="text-[11px] text-[#64748B]">A√ß√µes registradas</p>
                   </div>
                   <div className="rounded-full bg-[#E2E8F8] px-3 py-1 text-sm font-bold text-[#0F172A]">{entry.count}</div>
                 </div>
@@ -231,16 +304,16 @@ export default function Dashboard() {
           </div>
         </article>
 
-        <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Sa˙de da Checklists</p>
-          <h2 className="mt-2 text-xl font-bold text-[#0F172A]">⁄ltima inspeÁ„o por equipamento</h2>
+        <article className="tkf-card p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Sa√∫de da Frota</p>
+          <h2 className="mt-2 text-xl font-bold text-[#0F172A]">Empilhadeiras cr√≠ticas</h2>
           <div className="mt-5 space-y-3">
-            {equipmentHealth.map((equipment) => (
+            {(criticalEquipments.length ? criticalEquipments : equipmentHealth.slice(0, 5)).map((equipment) => (
               <div key={equipment.id} className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-[#0F172A]">{equipment.nome}</p>
-                    <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} ï {equipment.tipo}</p>
+                    <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} ‚Ä¢ {equipment.tipo}</p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${equipment.status === 'OK' ? 'bg-[#E6F7F8] text-[#006970]' : equipment.status === 'NOK' ? 'bg-[#FEF2F2] text-[#981B1B]' : 'bg-[#E2E8F0] text-[#475569]'}`}>
                     {equipment.status}
@@ -267,7 +340,7 @@ export default function Dashboard() {
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+        <article className="tkf-card p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Auditoria de checklist</p>
@@ -285,7 +358,7 @@ export default function Dashboard() {
                   <th className="px-3 py-3">Item</th>
                   <th className="px-3 py-3">Status</th>
                   <th className="px-3 py-3">Operador</th>
-                  <th className="px-3 py-3">AÁ„o</th>
+                  <th className="px-3 py-3">A√ß√£o</th>
                 </tr>
               </thead>
               <tbody>
@@ -311,7 +384,7 @@ export default function Dashboard() {
                           Excluir
                         </button>
                       ) : (
-                        <span className="text-[11px] text-[#6C797B]">Sem permiss„o</span>
+                        <span className="text-[11px] text-[#6C797B]">Sem permiss√£o</span>
                       )}
                     </td>
                   </tr>
@@ -320,11 +393,11 @@ export default function Dashboard() {
             </table>
           </div>
           {filteredRecords.length > 15 && (
-            <div className="mt-4 text-xs text-[#64748B]">Apenas os 15 registros mais recentes s„o exibidos aqui para performance.</div>
+            <div className="mt-4 text-xs text-[#64748B]">Apenas os 15 registros mais recentes s√£o exibidos aqui para performance.</div>
           )}
         </article>
 
-        <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+        <article className="tkf-card p-5">
           <div className="flex items-center gap-3">
             <Plus className="w-5 h-5 text-[#1E3A8A]" />
             <div>
@@ -339,16 +412,16 @@ export default function Dashboard() {
               <input
                 value={equipmentName}
                 onChange={(event) => setEquipmentName(event.target.value)}
-                className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#0F172A] focus:border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/10"
-                placeholder="Empilhadeira elÈtrica Toyota 8FBRE16S"
+                className="tkf-input"
+                placeholder="Empilhadeira el√©trica Toyota 8FBRE16S"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">PatrimÙnio</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">Patrim√¥nio</label>
               <input
                 value={equipmentPatrimonio}
                 onChange={(event) => setEquipmentPatrimonio(event.target.value)}
-                className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#0F172A] focus:border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/10"
+                className="tkf-input"
                 placeholder="EMP-4410"
               />
             </div>
@@ -357,14 +430,14 @@ export default function Dashboard() {
               <input
                 value={equipmentType}
                 onChange={(event) => setEquipmentType(event.target.value)}
-                className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#0F172A] focus:border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/10"
-                placeholder="Empilhadeira retr·til"
+                className="tkf-input"
+                placeholder="Empilhadeira retr√°til"
               />
             </div>
             <button
               type="button"
               onClick={handleCreateEquipment}
-              className="w-full rounded-2xl bg-[#1E3A8A] px-4 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#152e72]"
+              className="tkf-btn-primary w-full uppercase tracking-[0.16em]"
             >
               Cadastrar ativo
             </button>
@@ -381,12 +454,12 @@ export default function Dashboard() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-[#0F172A]">{equipment.nome}</p>
-                        <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} ï {equipment.tipo}</p>
+                        <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} ‚Ä¢ {equipment.tipo}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveEquipment(equipment.id)}
-                        className="inline-flex items-center gap-2 rounded-full border border-[#F1F4F6] bg-[#FEF2F2] px-3 py-2 text-[10px] font-semibold text-[#981B1B] hover:bg-[#FEE2E2] transition"
+                        className="tkf-btn-danger"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         Remover
@@ -400,14 +473,49 @@ export default function Dashboard() {
         </article>
       </section>
 
-      <section className="rounded-3xl border border-[#E2E8F0] bg-[#F8FAFC] p-5 text-sm text-[#475569] shadow-sm">
+      <section className="grid gap-5 xl:grid-cols-2">
+        <article className="tkf-card p-5">
+          <div className="flex items-center gap-2 font-semibold text-[#0F172A] mb-2">
+            <Siren className="w-4 h-4 text-amber-600" />
+            Falhas Recorrentes
+          </div>
+          <div className="space-y-2">
+            {recurringFailures.length === 0 ? (
+              <div className="tkf-empty">Nenhuma falha recorrente no per√≠odo selecionado.</div>
+            ) : recurringFailures.map((failure) => (
+              <div key={failure.item} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+                <span className="font-medium text-slate-700">{failure.item}</span>
+                <span className="rounded-full bg-amber-100 px-2 py-1 font-semibold text-amber-700">{failure.count}x</span>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="tkf-card p-5">
+          <div className="flex items-center gap-2 font-semibold text-[#0F172A] mb-2">
+            <CircleDot className="w-4 h-4 text-[#2563eb]" />
+            Atividade Recente
+          </div>
+          <div className="space-y-2">
+            {filteredRecords.slice(0, 6).map((record) => (
+              <div key={record.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+                <p className="font-semibold text-slate-800">{record.equipamento}</p>
+                <p className="text-slate-600">{record.item} ‚Ä¢ {record.status} ‚Ä¢ {record.operador}</p>
+              </div>
+            ))}
+            {filteredRecords.length === 0 && <div className="tkf-empty">Sem atividade recente para os filtros atuais.</div>}
+          </div>
+        </article>
+      </section>
+
+      <section className="tkf-card-muted p-5 text-sm text-[#475569]">
         <div className="flex items-center gap-2 font-semibold text-[#0F172A] mb-2">
           <Info className="w-4 h-4" />
-          ObservaÁ„o de Gest„o
+          Observa√ß√£o de Gest√£o
         </div>
         <p>
-          Esta ·rea permite que gerentes visualizem o status de toda Checklists, ajustem ativos e removam registros indevidos com seguranÁa.
-          A exclus„o de registros tambÈm tenta manter sincronizaÁ„o com o banco de dados remoto quando o Supabase estiver configurado.
+          Esta √°rea permite que gerentes visualizem o status de toda Checklists, ajustem ativos e removam registros indevidos com seguran√ßa.
+          A exclus√£o de registros tamb√©m tenta manter sincroniza√ß√£o com o banco de dados remoto quando o Supabase estiver configurado.
         </p>
       </section>
     </div>
