@@ -131,7 +131,6 @@ export default function Dashboard() {
   );
 
   const handleDeleteRecord = (id: string) => {
-    // Permission check: Only gerente/master can delete
     if (!user || (user.role !== 'gerente' && user.role !== 'master')) {
       setNotification({ message: 'Voc� n�o tem permiss�o para excluir registros.', type: 'error' });
       return;
@@ -515,8 +514,13 @@ export default function Dashboard() {
           Observa��o de Gest�o
         </div>
         <p>
+<<<<<<< HEAD
           Esta �rea permite que gerentes visualizem o status de toda Checklists, ajustem ativos e removam registros indevidos com seguran�a.
           A exclus�o de registros tamb�m tenta manter sincroniza��o com o banco de dados remoto quando o Supabase estiver configurado.
+=======
+          Esta área permite que gerentes visualizem o status de toda Checklists, ajustem ativos e removam registros indevidos com segurança.
+          A exclusão de registros também tenta manter sincronização com o banco de dados remoto quando o Supabase estiver configurado.
+>>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
         </p>
       </section>
     </div>
