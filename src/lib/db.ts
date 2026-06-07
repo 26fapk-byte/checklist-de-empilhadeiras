@@ -25,7 +25,7 @@ export function generateUUID(): string {
   });
 }
 
-// The 17 operational checkpoint attributes from Ativa Hospitalar PDF form.
+// The 17 operational checkpoint attributes from official PDF form.
 export const CHECKLIST_ITEMS: ChecklistItemMeta[] = [
   { key: 'nivel_bateria', label: 'Nível da Bateria', categoria: 'Eletrico' },
   { key: 'travamento_bateria', label: 'Travamento da Bateria', categoria: 'Eletrico' },
@@ -46,7 +46,34 @@ export const CHECKLIST_ITEMS: ChecklistItemMeta[] = [
   { key: 'limpeza_empilhadeira', label: 'Limpeza da Empilhadeira', categoria: 'Limpeza' }
 ];
 
+<<<<<<< HEAD
 const DEFAULT_OPERATORS: Operator[] = [];
+<<<<<<< HEAD
+=======
+const DEFAULT_EQUIPMENTS: Equipment[] = [];
+=======
+const DEFAULT_OPERATORS: Operator[] = [
+  { id: '1', nome: 'Carlos Eduardo', matricula: 'AH-8821', setor: 'Medicamentos Termolábeis', ativo: true },
+  { id: '2', nome: 'Mariana Silva', matricula: 'AH-3341', setor: 'Logística Central', ativo: true },
+  { id: '3', nome: 'Ricardo Oliveira', matricula: 'AH-0259', setor: 'Recebimento e Docas', ativo: true },
+  { id: '4', nome: 'Juliana Mendes', matricula: 'AH-9174', setor: 'Expedição Hospitalar', ativo: true }
+];
+
+const DEFAULT_EQUIPMENTS: Equipment[] = [
+  { id: '1', nome: 'Patinete Elétrico Jungheinrich EJE 120', patrimonio: 'PAT-1012', tipo: 'Patinete Elétrica', ativo: true },
+  { id: '2', nome: 'Empilhadeira Retrátil Toyota 8FBRE16S', patrimonio: 'EMP-4410', tipo: 'Retrátil Elétrica', ativo: true },
+  { id: '3', nome: 'Transpaleteira Elétrica Still EGU 20', patrimonio: 'TRS-2005', tipo: 'Transpaleteira', ativo: true },
+  { id: '4', nome: 'Empilhadeira Yale ERP15 S-Series', patrimonio: 'EMP-3089', tipo: 'Mastro Duplo ERP', ativo: true }
+];
+
+// Pre-hydrate some checklists to simulate operational history right out of the gate
+// DESATIVADO: Os dados de teste foram removidos para entregar o app zerado
+const getInitialHistory = (): ChecklistRecord[] => {
+  // Retorna array vazio - sem dados de teste
+  return [];
+};
+>>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+>>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 
 // Local storage namespaces (offline cache for submissions only — not fleet data)
 const STORE_PREFIX = 'tkf_logicheck_v2_';
@@ -489,4 +516,47 @@ export class LocalDb {
       inspectionsByPeriod
     };
   }
+}
+
+// ─── Equipment Supabase operations (async, outside LocalDb class) ──────────────
+
+export async function getEquipmentsFromSupabase(): Promise<Equipment[]> {
+  if (!isSupabaseConfigured || !supabase) {
+    return [];
+  }
+  try {
+    const { data, error } = await supabase
+      .from('equipamentos_frota')
+      .select('*')
+      .order('patrimonio');
+    if (error) {
+      console.error('Erro ao buscar equipamentos:', error);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error('Erro de rede ao buscar equipamentos:', err);
+    return [];
+  }
+}
+
+export async function addEquipmentToSupabase(equipment: Equipment): Promise<void> {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
+  const { error } = await supabase
+    .from('equipamentos_frota')
+    .insert(equipment);
+  if (error) throw error;
+}
+
+export async function removeEquipmentFromSupabase(id: string): Promise<void> {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
+  const { error } = await supabase
+    .from('equipamentos_frota')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
 }

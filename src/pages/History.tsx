@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import React, { useState, useMemo } from 'react';
 import { LocalDb } from '../lib/db';
 import { useEquipments } from '../hooks/useEquipments';
+=======
+import React, { useState, useMemo, useEffect } from 'react';
+import { LocalDb, getEquipmentsFromSupabase } from '../lib/db';
+import { Equipment } from '../types';
+>>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 import { 
   Search, 
   ChevronLeft, 
@@ -22,7 +28,21 @@ export default function History() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
 
+<<<<<<< HEAD
   const { equipments } = useEquipments();
+=======
+  const [equipments, setEquipments] = useState<Equipment[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const data = await getEquipmentsFromSupabase();
+      if (active) setEquipments(data);
+    }
+    load();
+    return () => { active = false; };
+  }, []);
+>>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 
   // Retrieve records from database
   const records = useMemo(() => {
@@ -132,13 +152,13 @@ export default function History() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6 pb-24">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6 pb-24 text-white">
       
       {/* Title & Stats summary */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="tkf-title">Histórico Operacional</h2>
-          <p className="text-xs text-[#6C797B] mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Logs completos de conformidade. Exiba e audite registros rapidamente.
           </p>
         </div>
@@ -146,9 +166,9 @@ export default function History() {
         {/* Action Export */}
         <button
           onClick={handleExportCSV}
-          className="tkf-btn-primary bg-white border border-[#E2E8F0] text-[#1e3a8a] h-12 px-4 rounded-xl hover:bg-[#F8FAFC] shrink-0"
+          className="tkf-btn-primary h-12 px-4 rounded-xl shrink-0 gap-2 cursor-pointer"
         >
-          <FileSpreadsheet className="w-4 h-4 text-[#1e3a8a]" />
+          <FileSpreadsheet className="w-4 h-4" />
           <span>EXPORTAR HISTÓRICO (CSV)</span>
         </button>
       </div>
@@ -158,7 +178,7 @@ export default function History() {
         
         {/* Quick Search */}
         <div className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C797B]">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
             <Search className="w-4.5 h-4.5" />
           </span>
           <input
@@ -169,7 +189,7 @@ export default function History() {
               setCurrentPage(1); // Reset page on query
             }}
             placeholder="Buscar por operador, marca da empilhadeira, item defeituoso..."
-            className="tkf-input pl-10"
+            className="tkf-input pl-10 text-xs"
           />
         </div>
 
@@ -178,7 +198,7 @@ export default function History() {
           
           {/* Month selective */}
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6C797B]">Mês</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mês</span>
             <select
               value={filterMonth}
               onChange={(e) => {
@@ -198,7 +218,7 @@ export default function History() {
 
           {/* Forklift Selector */}
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6C797B]">Empilhadeira</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Empilhadeira</span>
             <select
               value={filterEq}
               onChange={(e) => {
@@ -218,7 +238,7 @@ export default function History() {
 
           {/* Status selective */}
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6C797B]">Status</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Status</span>
             <select
               value={filterStatus}
               onChange={(e) => {
@@ -235,7 +255,7 @@ export default function History() {
 
           {/* Sorting Direction */}
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6C797B]">Ordenação</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ordenação</span>
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
@@ -251,7 +271,7 @@ export default function History() {
       </section>
 
       {/* Main Grid Log View - Mobile Optimized (Cards on mobile, tabular on desktop) */}
-      <section className="tkf-card overflow-hidden bg-[#F4F7F9] sm:bg-white">
+      <section className="tkf-card overflow-hidden bg-transparent border-none sm:bg-[#0e131f] sm:border sm:border-white/5">
         
         {/* Mobile Grid Layout Cards */}
         <div className="sm:hidden space-y-3">
@@ -261,44 +281,44 @@ export default function History() {
               return (
                 <div 
                   key={rec.id} 
-                  className={`bg-white border rounded-lg p-3.5 space-y-3 relative overflow-hidden transition-all ${
-                    isOk ? 'border-[#E2E8F0]' : 'border-red-200 bg-red-50/5'
+                  className={`bg-[#131a2c]/60 border rounded-lg p-3.5 space-y-3 relative overflow-hidden transition-all ${
+                    isOk ? 'border-white/5' : 'border-red-500/20 bg-red-500/5'
                   }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="space-y-1 max-w-[70%]">
-                      <span className="text-[9px] font-bold text-[#6C797B] uppercase tracking-wider flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-[#1e3a8a]" />
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-[#4364f7]" />
                         <span>{rec.data.split('-').reverse().join('/')} &bull; {rec.hora}</span>
                       </span>
-                      <h4 className="text-xs font-bold text-[#181C1E]">{rec.item}</h4>
+                      <h4 className="text-xs font-bold text-slate-200">{rec.item}</h4>
                     </div>
 
                     {/* Status Pill matching corporate standards */}
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
                       isOk 
-                        ? 'bg-[#E6F7F8] border border-[#00A9B4] text-[#006970]' 
-                        : 'bg-[#003366] text-white'
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' 
+                        : 'bg-red-500/10 border-red-500/20 text-red-300'
                     }`}>
                       {rec.status}
                     </span>
                   </div>
 
                   {/* Forklift & Operator metadata */}
-                  <div className="grid grid-cols-2 gap-2 text-[10.5px] border-t border-[#F1F4F6] pt-2.5 text-[#3D494A]">
+                  <div className="grid grid-cols-2 gap-2 text-[10.5px] border-t border-white/5 pt-2.5 text-slate-400 font-medium">
                     <p className="flex items-center gap-1">
-                      <Truck className="w-3.5 h-3.5 text-[#1e3a8a] shrink-0" />
+                      <Truck className="w-3.5 h-3.5 text-[#4364f7] shrink-0" />
                       <span className="truncate" title={rec.equipamento}>{rec.patrimonio || rec.equipamento.split(' ')[0]}</span>
                     </p>
                     <p className="flex items-center gap-1 justify-end">
-                      <User className="w-3.5 h-3.5 text-[#1e3a8a] shrink-0" />
+                      <User className="w-3.5 h-3.5 text-[#4364f7] shrink-0" />
                       <span className="truncate">{rec.operador.split(' ')[0]}</span>
                     </p>
                   </div>
 
                   {/* Conditional Failure Observation */}
                   {!isOk && rec.observacao && (
-                    <div className="bg-[#FFF8F8] text-[10.5px] p-2.5 rounded border border-red-100 text-[#93000a] leading-relaxed">
+                    <div className="bg-red-500/10 text-[10.5px] p-2.5 rounded border border-red-500/20 text-red-300 leading-relaxed">
                       <span className="font-bold">Avaria relatada:</span> {rec.observacao}
                     </div>
                   )}
@@ -306,7 +326,7 @@ export default function History() {
               );
             })
           ) : (
-            <div className="bg-white border border-[#E2E8F0] p-8 text-center rounded-lg text-[#6C797B] text-xs">
+            <div className="bg-[#0e131f] border border-white/5 p-8 text-center rounded-lg text-slate-400 text-xs">
               Nenhum checklist correspondente aos filtros.
             </div>
           )}
@@ -315,7 +335,7 @@ export default function History() {
         {/* Desktop High-Density Corporate Table Grid */}
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[11px] font-bold text-[#6C797B] uppercase tracking-wider">
+            <thead className="bg-[#131a2c] border-b border-white/5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               <tr>
                 <th className="px-5 py-3.5">Data/Hora</th>
                 <th className="px-5 py-3.5">Equipamento</th>
@@ -325,44 +345,44 @@ export default function History() {
                 <th className="px-5 py-3.5">Observação Técnico-Operacional</th>
               </tr>
             </thead>
-            <tbody className="text-xs text-[#181C1E] divide-y divide-[#F1F4F6]">
+            <tbody className="text-xs text-slate-200 divide-y divide-white/5">
               {paginatedRecords.length > 0 ? (
                 paginatedRecords.map((rec) => {
                   const isOk = rec.status === 'OK';
                   return (
                     <tr 
                       key={rec.id} 
-                      className={`hover:bg-[#F8FAFC] transition-colors ${
-                        isOk ? '' : 'bg-red-50/10'
+                      className={`hover:bg-[#131a2c]/40 transition-colors ${
+                        isOk ? '' : 'bg-red-500/5'
                       }`}
                     >
                       <td className="px-5 py-4 whitespace-nowrap">
                         <span className="font-bold">{rec.data.split('-').reverse().join('/')}</span>
-                        <span className="text-[#6C797B] ml-1.5">{rec.hora}</span>
+                        <span className="text-slate-400 ml-1.5">{rec.hora}</span>
                       </td>
-                      <td className="px-5 py-4 font-semibold whitespace-nowrap text-[#006970]">
+                      <td className="px-5 py-4 font-semibold whitespace-nowrap text-[#93c5fd]">
                         {rec.equipamento}
                       </td>
                       <td className="px-5 py-4 font-semibold">
                         {rec.item}
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <span className={`text-[10px] p-1 px-3 rounded-full font-bold inline-block leading-none text-center ${
+                        <span className={`text-[10px] p-1 px-3 rounded-full font-bold border inline-block leading-none text-center ${
                           isOk 
-                            ? 'bg-[#E6F7F8] border border-[#00A9B4] text-[#006970]' 
-                            : 'bg-[#003366] text-white'
+                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' 
+                            : 'bg-red-500/10 border-red-500/20 text-red-300'
                         }`}>
                           {rec.status}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-[#3D494A] whitespace-nowrap font-medium">
+                      <td className="px-5 py-4 text-slate-300 whitespace-nowrap font-medium">
                         {rec.operador}
                       </td>
                       <td className="px-5 py-4">
                         {isOk ? (
-                          <span className="text-[#8B9C9B] italic">Sem defeitos</span>
+                          <span className="text-slate-500 italic">Sem defeitos</span>
                         ) : (
-                          <span className="text-red-700 font-semibold p-1 px-1.5 rounded bg-red-50 border border-red-100 block max-w-sm truncate" title={rec.observacao}>
+                          <span className="text-red-300 font-semibold p-1 px-1.5 rounded bg-red-500/10 border border-red-500/15 block max-w-sm truncate" title={rec.observacao}>
                             {rec.observacao}
                           </span>
                         )}
@@ -372,7 +392,7 @@ export default function History() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-[#6C797B]">
+                  <td colSpan={6} className="px-5 py-10 text-center text-slate-400">
                     Nenhum checklist de empilhadeira localizado para as seleções inseridas.
                   </td>
                 </tr>
@@ -382,10 +402,10 @@ export default function History() {
         </div>
 
         {/* Structured Pagination Navigation */}
-        <div className="bg-white border-t border-[#E2E8F0] p-4 flex items-center justify-between gap-4 text-xs select-none">
-          <p className="text-[#6C797B]">
-            Exibindo <span className="font-bold text-[#181C1E]">{filteredRecords.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> a{' '}
-            <span className="font-bold text-[#181C1E]">
+        <div className="bg-[#0e131f] border-t border-white/5 p-4 flex items-center justify-between gap-4 text-xs select-none">
+          <p className="text-slate-400">
+            Exibindo <span className="font-bold text-slate-100">{filteredRecords.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> a{' '}
+            <span className="font-bold text-slate-100">
               {Math.min(currentPage * itemsPerPage, filteredRecords.length)}
             </span>{' '}
             de <span className="font-semibold">{filteredRecords.length}</span> registros de auditoria
@@ -395,17 +415,17 @@ export default function History() {
             <button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
-              className="w-10 h-10 border border-[#E2E8F0] rounded-lg flex items-center justify-center hover:bg-[#F8FAFC] disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer text-[#3D494A]"
+              className="w-10 h-10 border border-white/10 rounded-lg flex items-center justify-center hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer text-slate-300"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="px-3.5 py-1 border border-[#E2E8F0] h-10 rounded-lg flex items-center justify-center bg-[#F8FAFC] text-[#3D494A] font-medium min-w-[50px]">
+            <span className="px-3.5 py-1 border border-white/10 h-10 rounded-lg flex items-center justify-center bg-[#131a2c] text-slate-100 font-medium min-w-[50px]">
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
-              className="w-10 h-10 border border-[#E2E8F0] rounded-lg flex items-center justify-center hover:bg-[#F8FAFC] disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer text-[#3D494A]"
+              className="w-10 h-10 border border-white/10 rounded-lg flex items-center justify-center hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer text-slate-300"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

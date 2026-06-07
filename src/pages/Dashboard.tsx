@@ -1,7 +1,13 @@
+<<<<<<< HEAD
 ﻿import React, { useEffect, useMemo, useState } from 'react';
 import { LocalDb, createEquipment, removeEquipment } from '../lib/db';
 import { ChecklistRecord } from '../types';
 import { useEquipments } from '../hooks/useEquipments';
+=======
+import React, { useEffect, useMemo, useState } from 'react';
+import { LocalDb, generateUUID, getEquipmentsFromSupabase, addEquipmentToSupabase, removeEquipmentFromSupabase } from '../lib/db';
+import { ChecklistRecord, Equipment } from '../types';
+>>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 import {
   Truck,
   AlertCircle,
@@ -15,7 +21,6 @@ import {
   CircleDot,
   Activity
 } from 'lucide-react';
-import { generateUUID } from '../lib/db';
 import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
@@ -30,9 +35,18 @@ export default function Dashboard() {
   const [equipmentType, setEquipmentType] = useState('');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const loadData = () => {
+  const loadData = async () => {
     setRecords(LocalDb.getRecords());
+<<<<<<< HEAD
     reloadEquipments();
+=======
+    try {
+      const data = await getEquipmentsFromSupabase();
+      setEquipments(data);
+    } catch (err) {
+      console.error(err);
+    }
+>>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
   };
 
   useEffect(() => {
@@ -91,7 +105,7 @@ export default function Dashboard() {
         ...equipment,
         lastInspection: latest ? `${latest.data.split('-').reverse().join('/')} ${latest.hora}` : 'Sem registro',
         lastOperator: latest?.operador ?? 'Sem operador',
-        status: latest ? (failedItems.length > 0 ? 'NOK' : 'OK') : 'Sem inspeção',
+        status: latest ? (failedItems.length > 0 ? 'NOK' : 'OK') : 'Sem inspe��o',
         failedItems
       };
     });
@@ -128,18 +142,17 @@ export default function Dashboard() {
   );
 
   const handleDeleteRecord = (id: string) => {
-    // Permission check: Only gerente/master can delete
     if (!user || (user.role !== 'gerente' && user.role !== 'master')) {
-      setNotification({ message: 'Você não tem permissão para excluir registros.', type: 'error' });
+      setNotification({ message: 'Voc� n�o tem permiss�o para excluir registros.', type: 'error' });
       return;
     }
 
     const success = LocalDb.deleteRecord(id);
     if (success) {
-      setNotification({ message: 'Registro excluído com sucesso.', type: 'success' });
+      setNotification({ message: 'Registro exclu�do com sucesso.', type: 'success' });
       loadData();
     } else {
-      setNotification({ message: 'Não foi possível excluir o registro. Tente novamente.', type: 'error' });
+      setNotification({ message: 'N�o foi poss�vel excluir o registro. Tente novamente.', type: 'error' });
     }
   };
 
@@ -154,6 +167,7 @@ export default function Dashboard() {
       patrimonio: equipmentPatrimonio.trim().toUpperCase(),
       tipo: equipmentType.trim(),
       ativo: true
+<<<<<<< HEAD
     });
     if (!result.success) {
       setNotification({ message: result.error || 'Não foi possível cadastrar o equipamento.', type: 'error' });
@@ -174,6 +188,29 @@ export default function Dashboard() {
     }
     setNotification({ message: 'Equipamento removido da frota.', type: 'success' });
     loadData();
+=======
+    };
+    try {
+      await addEquipmentToSupabase(newEquipment);
+      setEquipmentName('');
+      setEquipmentPatrimonio('');
+      setEquipmentType('');
+      setNotification({ message: 'Equipamento cadastrado com sucesso.', type: 'success' });
+      await loadData();
+    } catch (err) {
+      setNotification({ message: 'Não foi possível cadastrar no Supabase.', type: 'error' });
+    }
+  };
+
+  const handleRemoveEquipment = async (id: string) => {
+    try {
+      await removeEquipmentFromSupabase(id);
+      setNotification({ message: 'Equipamento removido da frota.', type: 'success' });
+      await loadData();
+    } catch (err) {
+      setNotification({ message: 'Não foi possível remover no Supabase.', type: 'error' });
+    }
+>>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
   };
 
   useEffect(() => {
@@ -232,7 +269,7 @@ export default function Dashboard() {
         <article className="tkf-card p-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Inspeções totais</p>
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{totalInspections}</h2>
-          <p className="mt-2 text-xs text-[#475569]">Contagem de checklists únicos enviados hoje e no histórico.</p>
+          <p className="mt-2 text-xs text-[#475569]">Contagem de checklists �nicos enviados hoje e no hist�rico.</p>
         </article>
 
         <article className="tkf-card p-5">
@@ -258,16 +295,16 @@ export default function Dashboard() {
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{totalNok}</h2>
           <div className="mt-2 flex items-center gap-2 text-xs text-[#881337]">
             <AlertCircle className="w-4 h-4" />
-            <span>Registros com não conformidades</span>
+            <span>Registros com n�o conformidades</span>
           </div>
         </article>
 
         <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Máquinas ativas</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">M�quinas ativas</p>
           <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">{equipments.length}</h2>
           <div className="mt-2 flex items-center gap-2 text-xs text-[#1D4ED8]">
             <Truck className="w-4 h-4" />
-            <span>Equipamentos cadastrados</span>
+            <span>Checklists registrados</span>
           </div>
         </article>
       </section>
@@ -286,13 +323,13 @@ export default function Dashboard() {
 
           <div className="mt-5 space-y-3">
             {operatorRanking.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">Ainda não há registros suficientes.</div>
+              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">Ainda n�o h� registros suficientes.</div>
             ) : (
               operatorRanking.map((entry, index) => (
               <div key={entry.operador} className="flex items-center justify-between rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
                   <div>
                     <p className="text-sm font-semibold text-[#0F172A]">{entry.operador}</p>
-                    <p className="text-[11px] text-[#64748B]">Ações registradas</p>
+                    <p className="text-[11px] text-[#64748B]">A��es registradas</p>
                   </div>
                   <div className="rounded-full bg-[#E2E8F8] px-3 py-1 text-sm font-bold text-[#0F172A]">{entry.count}</div>
                 </div>
@@ -310,7 +347,7 @@ export default function Dashboard() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-[#0F172A]">{equipment.nome}</p>
-                    <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} • {equipment.tipo}</p>
+                    <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} � {equipment.tipo}</p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${equipment.status === 'OK' ? 'bg-[#E6F7F8] text-[#006970]' : equipment.status === 'NOK' ? 'bg-[#FEF2F2] text-[#981B1B]' : 'bg-[#E2E8F0] text-[#475569]'}`}>
                     {equipment.status}
@@ -355,7 +392,7 @@ export default function Dashboard() {
                   <th className="px-3 py-3">Item</th>
                   <th className="px-3 py-3">Status</th>
                   <th className="px-3 py-3">Operador</th>
-                  <th className="px-3 py-3">Ação</th>
+                  <th className="px-3 py-3">A��o</th>
                 </tr>
               </thead>
               <tbody>
@@ -381,7 +418,7 @@ export default function Dashboard() {
                           Excluir
                         </button>
                       ) : (
-                        <span className="text-[11px] text-[#6C797B]">Sem permissão</span>
+                        <span className="text-[11px] text-[#6C797B]">Sem permiss�o</span>
                       )}
                     </td>
                   </tr>
@@ -390,7 +427,7 @@ export default function Dashboard() {
             </table>
           </div>
           {filteredRecords.length > 15 && (
-            <div className="mt-4 text-xs text-[#64748B]">Apenas os 15 registros mais recentes são exibidos aqui para performance.</div>
+            <div className="mt-4 text-xs text-[#64748B]">Apenas os 15 registros mais recentes s�o exibidos aqui para performance.</div>
           )}
         </article>
 
@@ -399,7 +436,7 @@ export default function Dashboard() {
             <Plus className="w-5 h-5 text-[#1E3A8A]" />
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Cadastro de Equipamento</p>
-              <h2 className="text-xl font-bold text-[#0F172A]">Gerencie ativos da frota</h2>
+              <h2 className="text-xl font-bold text-[#0F172A]">Gerencie ativos da Checklists</h2>
             </div>
           </div>
 
@@ -414,7 +451,7 @@ export default function Dashboard() {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">Patrimônio</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">Patrim�nio</label>
               <input
                 value={equipmentPatrimonio}
                 onChange={(event) => setEquipmentPatrimonio(event.target.value)}
@@ -441,7 +478,7 @@ export default function Dashboard() {
           </div>
 
           <div className="mt-8 space-y-3">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Ativos cadastrados</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#64748B]">Registros operacionais</div>
             {equipments.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">Nenhum equipamento cadastrado.</div>
             ) : (
@@ -451,7 +488,7 @@ export default function Dashboard() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-[#0F172A]">{equipment.nome}</p>
-                        <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} • {equipment.tipo}</p>
+                        <p className="text-[11px] text-[#64748B]">{equipment.patrimonio} � {equipment.tipo}</p>
                       </div>
                       <button
                         type="button"
@@ -508,11 +545,16 @@ export default function Dashboard() {
       <section className="tkf-card-muted p-5 text-sm text-[#475569]">
         <div className="flex items-center gap-2 font-semibold text-[#0F172A] mb-2">
           <Info className="w-4 h-4" />
-          Observação de Gestão
+          Observa��o de Gest�o
         </div>
         <p>
-          Esta área permite que gerentes visualizem o status de toda frota, ajustem ativos e removam registros indevidos com segurança.
+<<<<<<< HEAD
+          Esta �rea permite que gerentes visualizem o status de toda Checklists, ajustem ativos e removam registros indevidos com seguran�a.
+          A exclus�o de registros tamb�m tenta manter sincroniza��o com o banco de dados remoto quando o Supabase estiver configurado.
+=======
+          Esta área permite que gerentes visualizem o status de toda Checklists, ajustem ativos e removam registros indevidos com segurança.
           A exclusão de registros também tenta manter sincronização com o banco de dados remoto quando o Supabase estiver configurado.
+>>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
         </p>
       </section>
     </div>
