@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { LocalDb } from '../lib/db';
+import { useEquipments } from '../hooks/useEquipments';
 import { 
   Search, 
   ChevronLeft, 
@@ -21,7 +22,7 @@ export default function History() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
 
-  const equipments = LocalDb.getEquipments();
+  const { equipments } = useEquipments();
 
   // Retrieve records from database
   const records = useMemo(() => {

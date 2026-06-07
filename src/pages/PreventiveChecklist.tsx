@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { AlertTriangle, Battery, ClipboardCheck, Gauge, Truck } from 'lucide-react';
 import { LocalDb, CHECKLIST_ITEMS, generateUUID } from '../lib/db';
+import { useEquipments } from '../hooks/useEquipments';
 import { useAuth } from '../context/AuthContext';
 import { PreventiveChecklistSubmission } from '../types';
 import StatusToggle from '../components/StatusToggle';
@@ -9,7 +10,7 @@ import { useToast } from '../hooks/useToast';
 
 export default function PreventiveChecklist() {
   const { user } = useAuth();
-  const equipments = LocalDb.getEquipments();
+  const { equipments } = useEquipments();
   const { toast, showToast } = useToast();
   const [equipment, setEquipment] = useState('');
   const [horimetro, setHorimetro] = useState('');

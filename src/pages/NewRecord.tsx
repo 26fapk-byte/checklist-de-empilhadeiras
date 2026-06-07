@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LocalDb, CHECKLIST_ITEMS, generateUUID } from '../lib/db';
+import { useEquipments } from '../hooks/useEquipments';
 import { ChecklistRecord } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -19,7 +20,7 @@ import { useToast } from '../hooks/useToast';
 
 export default function NewRecord() {
   const { user } = useAuth();
-  const equipments = LocalDb.getEquipments();
+  const { equipments } = useEquipments();
 
   // Always include current authenticated user as an available operator.
   const operators = useMemo(() => {

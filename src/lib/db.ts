@@ -47,15 +47,93 @@ export const CHECKLIST_ITEMS: ChecklistItemMeta[] = [
 ];
 
 const DEFAULT_OPERATORS: Operator[] = [];
-const DEFAULT_EQUIPMENTS: Equipment[] = [];
 
-// Local storage namespaces
+// Local storage namespaces (offline cache for submissions only — not fleet data)
 const STORE_PREFIX = 'tkf_logicheck_v2_';
 const KEY_RECORDS = `${STORE_PREFIX}records`;
 const KEY_SYNC_QUEUE = `${STORE_PREFIX}sync_queue`;
-const KEY_EQUIPMENTS = `${STORE_PREFIX}equipments`;
 const KEY_PREVENTIVE_CHECKLISTS = `${STORE_PREFIX}preventive_checklists`;
 const KEY_BATTERY_RECHARGES = `${STORE_PREFIX}battery_recharges`;
+
+type EquipmentRow = {
+  id: string;
+  nome: string;
+  patrimonio: string;
+  tipo: string;
+  ativo: boolean;
+};
+
+function mapEquipmentRow(row: EquipmentRow): Equipment {
+  return {
+    id: row.id,
+    nome: row.nome,
+    patrimonio: row.patrimonio,
+    tipo: row.tipo,
+    ativo: row.ativo
+  };
+}
+
+export async function fetchEquipments(): Promise<Equipment[]> {
+  if (!isSupabaseConfigured || !supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('equipamentos')
+    .select('id, nome, patrimonio, tipo, ativo')
+    .eq('ativo', true)
+    .order('patrimonio', { ascending: true });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map(mapEquipmentRow);
+}
+
+export async function createEquipment(
+  equipment: Omit<Equipment, 'id'> & { id?: string }
+): Promise<{ success: boolean; error?: string; equipment?: Equipment }> {
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, error: 'Supabase não configurado. Verifique as variáveis de ambiente.' };
+  }
+
+  const payload = {
+    id: equipment.id || generateUUID(),
+    nome: equipment.nome,
+    patrimonio: equipment.patrimonio,
+    tipo: equipment.tipo,
+    ativo: equipment.ativo ?? true
+  };
+
+  const { data, error } = await supabase
+    .from('equipamentos')
+    .insert(payload)
+    .select('id, nome, patrimonio, tipo, ativo')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      return { success: false, error: 'Já existe um equipamento com este patrimônio.' };
+    }
+    return { success: false, error: 'Não foi possível cadastrar o equipamento.' };
+  }
+
+  return { success: true, equipment: mapEquipmentRow(data as EquipmentRow) };
+}
+
+export async function removeEquipment(id: string): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from('equipamentos')
+    .update({ ativo: false })
+    .eq('id', id);
+
+  return !error;
+}
 
 type SyncQueueEntry = {
   table: 'registros_checklist' | 'checklist_preventivo' | 'abastecimento_recarga_bateria';
@@ -66,9 +144,6 @@ export class LocalDb {
   static init() {
     if (!localStorage.getItem(KEY_RECORDS)) {
       localStorage.setItem(KEY_RECORDS, JSON.stringify([]));
-    }
-    if (!localStorage.getItem(KEY_EQUIPMENTS)) {
-      localStorage.setItem(KEY_EQUIPMENTS, JSON.stringify([]));
     }
     if (!localStorage.getItem(KEY_PREVENTIVE_CHECKLISTS)) {
       localStorage.setItem(KEY_PREVENTIVE_CHECKLISTS, JSON.stringify([]));
@@ -90,31 +165,6 @@ export class LocalDb {
 
   static getOperators(): Operator[] {
     return DEFAULT_OPERATORS;
-  }
-
-  static getEquipments(): Equipment[] {
-    try {
-      const stored = localStorage.getItem(KEY_EQUIPMENTS);
-      if (stored) return JSON.parse(stored);
-    } catch {
-      return [];
-    }
-    return DEFAULT_EQUIPMENTS;
-  }
-
-  static addEquipment(equipment: Equipment): void {
-    try {
-      const current = this.getEquipments();
-      localStorage.setItem(KEY_EQUIPMENTS, JSON.stringify([...current, equipment]));
-    } catch {}
-  }
-
-  static removeEquipment(id: string): void {
-    try {
-      const current = this.getEquipments();
-      const filtered = current.filter(eq => eq.id !== id);
-      localStorage.setItem(KEY_EQUIPMENTS, JSON.stringify(filtered));
-    } catch {}
   }
 
   static getChecklistItems() {

@@ -109,7 +109,39 @@ USING (true);
 
 CREATE INDEX IF NOT EXISTS idx_abastecimento_data ON public.abastecimento_recarga_bateria (data, patrimonio);
 
--- 7. Instruções Adicionais de Conectividade
+-- 7. Tabela de Equipamentos / Frota
+CREATE TABLE IF NOT EXISTS public.equipamentos (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    nome VARCHAR(255) NOT NULL,
+    patrimonio VARCHAR(120) NOT NULL UNIQUE,
+    tipo VARCHAR(120) NOT NULL,
+    ativo BOOLEAN DEFAULT true NOT NULL,
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
+ALTER TABLE public.equipamentos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "equipamentos_insert_auth"
+ON public.equipamentos
+FOR INSERT TO authenticated
+WITH CHECK (true);
+
+CREATE POLICY "equipamentos_select_auth"
+ON public.equipamentos
+FOR SELECT TO authenticated
+USING (true);
+
+CREATE POLICY "equipamentos_update_auth"
+ON public.equipamentos
+FOR UPDATE TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_equipamentos_patrimonio ON public.equipamentos (patrimonio);
+CREATE INDEX IF NOT EXISTS idx_equipamentos_ativo ON public.equipamentos (ativo);
+
+-- 8. Instruções Adicionais de Conectividade
 -- Cole as seguintes variáveis no painel de segredos do Vercel ou no arquivo .env local:
 -- VITE_SUPABASE_URL=Sua_URL_do_Projeto_Supabase
 -- VITE_SUPABASE_ANON_KEY=Sua_Chave_Anonima_do_Projeto_Supabase

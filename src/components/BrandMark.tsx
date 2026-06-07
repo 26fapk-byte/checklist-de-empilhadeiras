@@ -4,22 +4,31 @@ interface BrandMarkProps {
   compact?: boolean;
 }
 
+const LOGO_SRC = '/icon-512.svg';
+const LOGO_COMPACT_SRC = '/icon-192.svg';
+
 export default function BrandMark({ compact = false }: BrandMarkProps) {
   if (compact) {
     return (
-      <div className="relative h-10 w-10 rounded-xl border border-white/10 bg-[#0f172a] shadow-[0_12px_24px_rgba(15,23,42,0.35)]">
-        <span className="absolute left-[8px] top-[7px] text-sm font-bold tracking-tight text-white">TK</span>
-        <span className="absolute right-[6px] bottom-[5px] text-[10px] font-semibold text-[#2563eb]">F</span>
-      </div>
+      <img
+        src={LOGO_COMPACT_SRC}
+        alt="TKF LogiCheck"
+        className="h-10 w-10 rounded-xl shadow-[0_12px_24px_rgba(15,23,42,0.35)]"
+        width={40}
+        height={40}
+      />
     );
   }
 
   return (
     <div className="flex items-center gap-3">
-      <div className="relative h-12 w-12 rounded-2xl border border-white/10 bg-[#0f172a] shadow-[0_14px_30px_rgba(15,23,42,0.35)]">
-        <span className="absolute left-[9px] top-[7px] text-lg font-bold tracking-tight text-white">TK</span>
-        <span className="absolute right-[7px] bottom-[6px] text-[11px] font-semibold text-[#2563eb]">F</span>
-      </div>
+      <img
+        src={LOGO_SRC}
+        alt="TKF LogiCheck"
+        className="h-12 w-12 rounded-2xl shadow-[0_14px_30px_rgba(15,23,42,0.35)]"
+        width={48}
+        height={48}
+      />
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#94a3b8]">TKF</p>
         <h1 className="text-xl font-semibold tracking-tight text-white">

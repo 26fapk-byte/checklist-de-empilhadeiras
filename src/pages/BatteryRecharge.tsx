@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { BatteryCharging, Clock3, Droplets, Gauge, Wrench } from 'lucide-react';
 import { LocalDb, generateUUID } from '../lib/db';
+import { useEquipments } from '../hooks/useEquipments';
 import { useAuth } from '../context/AuthContext';
 import { BatteryRechargeRecord } from '../types';
 import StatusToggle from '../components/StatusToggle';
@@ -9,7 +10,7 @@ import { useToast } from '../hooks/useToast';
 
 export default function BatteryRecharge() {
   const { user } = useAuth();
-  const equipments = LocalDb.getEquipments();
+  const { equipments } = useEquipments();
   const { toast, showToast } = useToast();
 
   const [patrimonio, setPatrimonio] = useState('');

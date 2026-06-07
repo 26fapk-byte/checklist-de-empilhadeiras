@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
-import { LocalDb } from '../lib/db';
-import { ChecklistRecord, Equipment } from '../types';
+import { LocalDb, createEquipment, removeEquipment } from '../lib/db';
+import { ChecklistRecord } from '../types';
+import { useEquipments } from '../hooks/useEquipments';
 import {
   Truck,
   AlertCircle,
@@ -20,7 +21,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Dashboard() {
   const { user } = useAuth();
   const [records, setRecords] = useState<ChecklistRecord[]>([]);
-  const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const { equipments, reload: reloadEquipments } = useEquipments();
   const [selectedMonth, setSelectedMonth] = useState('Todos');
   const [selectedEq, setSelectedEq] = useState('Todos');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
@@ -31,7 +32,7 @@ export default function Dashboard() {
 
   const loadData = () => {
     setRecords(LocalDb.getRecords());
-    setEquipments(LocalDb.getEquipments());
+    reloadEquipments();
   };
 
   useEffect(() => {
@@ -142,19 +143,22 @@ export default function Dashboard() {
     }
   };
 
-  const handleCreateEquipment = () => {
+  const handleCreateEquipment = async () => {
     if (!equipmentName.trim() || !equipmentPatrimonio.trim() || !equipmentType.trim()) {
       setNotification({ message: 'Preencha todos os campos do cadastro de equipamento.', type: 'error' });
       return;
     }
-    const newEquipment: Equipment = {
+    const result = await createEquipment({
       id: generateUUID(),
       nome: equipmentName.trim(),
       patrimonio: equipmentPatrimonio.trim().toUpperCase(),
       tipo: equipmentType.trim(),
       ativo: true
-    };
-    LocalDb.addEquipment(newEquipment);
+    });
+    if (!result.success) {
+      setNotification({ message: result.error || 'Não foi possível cadastrar o equipamento.', type: 'error' });
+      return;
+    }
     setEquipmentName('');
     setEquipmentPatrimonio('');
     setEquipmentType('');
@@ -162,8 +166,12 @@ export default function Dashboard() {
     loadData();
   };
 
-  const handleRemoveEquipment = (id: string) => {
-    LocalDb.removeEquipment(id);
+  const handleRemoveEquipment = async (id: string) => {
+    const success = await removeEquipment(id);
+    if (!success) {
+      setNotification({ message: 'Não foi possível remover o equipamento.', type: 'error' });
+      return;
+    }
     setNotification({ message: 'Equipamento removido da frota.', type: 'success' });
     loadData();
   };
