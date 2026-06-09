@@ -545,16 +545,13 @@ export default function Dashboard() {
       <section className="tkf-card-muted p-5 text-sm text-[#475569]">
         <div className="flex items-center gap-2 font-semibold text-[#0F172A] mb-2">
           <Info className="w-4 h-4" />
-          Observa��o de Gest�o
+          Observação de Gestão
         </div>
         <p>
-<<<<<<< HEAD
-          Esta �rea permite que gerentes visualizem o status de toda Checklists, ajustem ativos e removam registros indevidos com seguran�a.
-          A exclus�o de registros tamb�m tenta manter sincroniza��o com o banco de dados remoto quando o Supabase estiver configurado.
-=======
-          Esta área permite que gerentes visualizem o status de toda Checklists, ajustem ativos e removam registros indevidos com segurança.
-          A exclusão de registros também tenta manter sincronização com o banco de dados remoto quando o Supabase estiver configurado.
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+          Esta área permite que gerentes visualizem o status de toda a operação,
+          ajustem ativos e removam registros indevidos com segurança.
+          A exclusão de registros também mantém sincronização com o banco de dados
+          remoto quando o Supabase estiver configurado.
         </p>
       </section>
     </div>
