@@ -4,8 +4,6 @@ import { useEquipments } from '../hooks/useEquipments';
 import { ChecklistRecord } from '../types';
 import { 
   Search, 
-  ChevronLeft, 
-  ChevronRight, 
   FileSpreadsheet,
   Clock, 
   User, 
@@ -22,9 +20,8 @@ export default function History() {
   const [records, setRecords] = useState<ChecklistRecord[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
+  // Dynamic Infinite Scroll / Load More state for high performance
+  const [visibleCount, setVisibleCount] = useState(100);
 
   const { equipments } = useEquipments();
 
@@ -95,23 +92,15 @@ export default function History() {
     return result;
   }, [records, searchTerm, filterMonth, filterEq, filterStatus, sortOrder]);
 
-  // Pagination bounds calculation
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage) || 1;
-  
-  const paginatedRecords = useMemo(() => {
-    // Clamp paging index to within range
-    const page = Math.min(currentPage, totalPages);
-    const start = (page - 1) * itemsPerPage;
-    return filteredRecords.slice(start, start + itemsPerPage);
-  }, [filteredRecords, currentPage, totalPages]);
+  // Dynamic slice of filtered records based on visibility threshold
+  const displayedRecords = useMemo(() => {
+    return filteredRecords.slice(0, visibleCount);
+  }, [filteredRecords, visibleCount]);
 
-  const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  };
+  // Reset visibility count when filters are changed to keep render pipeline lightweight
+  useEffect(() => {
+    setVisibleCount(100);
+  }, [searchTerm, filterMonth, filterEq, filterStatus]);
 
   const handleExportCSV = () => {
     try {
@@ -194,7 +183,6 @@ export default function History() {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset page on query
             }}
             placeholder="Buscar por operador, marca da empilhadeira, item defeituoso..."
             className="tkf-input pl-10 text-xs"
@@ -211,7 +199,6 @@ export default function History() {
               value={filterMonth}
               onChange={(e) => {
                 setFilterMonth(e.target.value);
-                setCurrentPage(1);
               }}
               className="tkf-select h-12 text-xs"
             >
@@ -231,7 +218,6 @@ export default function History() {
               value={filterEq}
               onChange={(e) => {
                 setFilterEq(e.target.value);
-                setCurrentPage(1);
               }}
               className="tkf-select h-12 text-xs"
             >
@@ -251,7 +237,6 @@ export default function History() {
               value={filterStatus}
               onChange={(e) => {
                 setFilterStatus(e.target.value);
-                setCurrentPage(1);
               }}
               className="tkf-select h-12 text-xs"
             >
@@ -283,8 +268,8 @@ export default function History() {
         
         {/* Mobile Grid Layout Cards */}
         <div className="sm:hidden space-y-3">
-          {paginatedRecords.length > 0 ? (
-            paginatedRecords.map((rec) => {
+          {displayedRecords.length > 0 ? (
+            displayedRecords.map((rec) => {
               const isOk = rec.status === 'OK';
               return (
                 <div 
@@ -354,8 +339,8 @@ export default function History() {
               </tr>
             </thead>
             <tbody className="text-xs text-slate-200 divide-y divide-white/5">
-              {paginatedRecords.length > 0 ? (
-                paginatedRecords.map((rec) => {
+              {displayedRecords.length > 0 ? (
+                displayedRecords.map((rec) => {
                   const isOk = rec.status === 'OK';
                   return (
                     <tr 
@@ -409,35 +394,21 @@ export default function History() {
           </table>
         </div>
 
-        {/* Structured Pagination Navigation */}
-        <div className="bg-[#0e131f] border-t border-white/5 p-4 flex items-center justify-between gap-4 text-xs select-none">
-          <p className="text-slate-400">
-            Exibindo <span className="font-bold text-slate-100">{filteredRecords.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> a{' '}
-            <span className="font-bold text-slate-100">
-              {Math.min(currentPage * itemsPerPage, filteredRecords.length)}
-            </span>{' '}
-            de <span className="font-semibold">{filteredRecords.length}</span> registros de auditoria
+        {/* Structured Infinite Load More Navigation */}
+        <div className="bg-[#0e131f] border-t border-white/5 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs select-none">
+          <p className="text-slate-400 text-center sm:text-left">
+            Exibindo <span className="font-bold text-slate-100">{Math.min(displayedRecords.length, filteredRecords.length)}</span> de{' '}
+            <span className="font-semibold text-slate-100">{filteredRecords.length}</span> registros de auditoria
           </p>
 
-          <div className="flex items-center gap-1.5 font-bold">
+          {filteredRecords.length > visibleCount && (
             <button
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-              className="w-10 h-10 border border-white/10 rounded-lg flex items-center justify-center hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer text-slate-300"
+              onClick={() => setVisibleCount(prev => prev + 100)}
+              className="tkf-btn-primary py-2 px-4 rounded-lg flex items-center gap-1 cursor-pointer text-xs uppercase font-bold"
             >
-              <ChevronLeft className="w-4 h-4" />
+              Carregar Mais (+100)
             </button>
-            <span className="px-3.5 py-1 border border-white/10 h-10 rounded-lg flex items-center justify-center bg-[#131a2c] text-slate-100 font-medium min-w-[50px]">
-              {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-              className="w-10 h-10 border border-white/10 rounded-lg flex items-center justify-center hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer text-slate-300"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+          )}
         </div>
 
       </section>
