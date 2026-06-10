@@ -588,22 +588,14 @@ export async function fetchChecklistRecordsFromSupabase(): Promise<ChecklistReco
   if (!isSupabaseConfigured || !supabase) {
     return [];
   }
-  try {
-    const { data, error } = await supabase
-      .from('registros_checklist')
-      .select('*')
-      .order('data', { ascending: false })
-      .order('hora', { ascending: false });
-    
-    if (error) {
-      console.error('Erro ao carregar registros do Supabase:', error);
-      return [];
-    }
-    return data || [];
-  } catch (err) {
-    console.error('Erro de rede ao carregar registros do Supabase:', err);
-    return [];
-  }
+  const { data, error } = await supabase
+    .from('registros_checklist')
+    .select('*');
+
+  console.log('SUPABASE DATA:', data);
+  console.log('SUPABASE ERROR:', error);
+
+  return (data || []) as ChecklistRecord[];
 }
 
 export async function fetchPreventiveChecklistsFromSupabase(): Promise<PreventiveChecklistSubmission[]> {
