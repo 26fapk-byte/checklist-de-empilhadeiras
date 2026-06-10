@@ -238,26 +238,40 @@ export class LocalDb {
       const raw = localStorage.getItem(KEY_SYNC_QUEUE);
       if (!raw) return true;
 
-      const parsed = JSON.parse(raw) as Array<ChecklistRecord | SyncQueueEntry>;
-      const queue: SyncQueueEntry[] = parsed.map((entry) => {
-        if ('table' in entry && 'payload' in entry) {
-          return entry as SyncQueueEntry;
-        }
-        return {
-          table: 'registros_checklist',
-          payload: entry as ChecklistRecord
-        };
-      });
+      // Safe parse for sync queue
+      let queue: SyncQueueEntry[] = [];
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return true;
+        queue = parsed.map((entry) => {
+          if (entry && typeof entry === 'object' && 'table' in entry && 'payload' in entry) {
+            return entry as SyncQueueEntry;
+          }
+          return {
+            table: 'registros_checklist',
+            payload: entry as ChecklistRecord
+          };
+        });
+      } catch {
+        // Clear corrupted queue to prevent infinite crashes
+        localStorage.setItem(KEY_SYNC_QUEUE, JSON.stringify([]));
+        return true;
+      }
+
       if (queue.length === 0) return true;
 
-      const rowsByTable = queue.reduce<Record<string, any[]>>((acc, entry) => {
-        if (!acc[entry.table]) acc[entry.table] = [];
+      const syncedIds = new Set<string>();
+      const entriesByTable: Record<string, { entry: SyncQueueEntry; row: any }[]> = {};
+
+      queue.forEach((entry) => {
+        if (!entry.payload) return;
+        let row: any = null;
 
         if (entry.table === 'registros_checklist') {
           const rec = entry.payload as ChecklistRecord;
           const hasValidUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rec.id);
-          const formattedHour = rec.hora.split(':').length === 2 ? rec.hora + ':00' : rec.hora;
-          acc[entry.table].push({
+          const formattedHour = rec.hora && rec.hora.split(':').length === 2 ? rec.hora + ':00' : rec.hora;
+          row = {
             id: hasValidUuid ? rec.id : generateUUID(),
             created_at: rec.created_at,
             data: rec.data,
@@ -266,31 +280,65 @@ export class LocalDb {
             equipamento: rec.equipamento,
             item: rec.item,
             status: rec.status,
-            observacao: rec.observacao
-          });
+            observacao: rec.observacao,
+            patrimonio: rec.patrimonio || '',
+            horimetro: rec.horimetro !== undefined ? rec.horimetro : null,
+            ligando: rec.ligando || null,
+            bateria_barras: rec.bateria_barras !== undefined ? rec.bateria_barras : null
+          };
         } else if (entry.table === 'checklist_preventivo') {
           const rec = entry.payload as PreventiveChecklistSubmission;
-          acc[entry.table].push({
+          row = {
             ...rec,
             itens: JSON.stringify(rec.itens)
-          });
-        } else {
-          const rec = entry.payload as BatteryRechargeRecord;
-          acc[entry.table].push(rec);
+          };
+        } else if (entry.table === 'abastecimento_recarga_bateria') {
+          row = entry.payload as BatteryRechargeRecord;
         }
 
-        return acc;
-      }, {} as Record<string, any[]>);
+        if (row) {
+          if (!entriesByTable[entry.table]) {
+            entriesByTable[entry.table] = [];
+          }
+          entriesByTable[entry.table].push({ entry, row });
+        }
+      });
 
-      for (const [table, rows] of Object.entries(rowsByTable)) {
-        if (!rows.length) continue;
+      let allSuccess = true;
+
+      for (const [table, items] of Object.entries(entriesByTable)) {
+        if (!items.length) continue;
+
+        const rows = items.map(x => x.row);
         const { error } = await supabase.from(table as any).insert(rows);
-        if (error) return false;
+
+        if (error) {
+          console.error(`Erro ao sincronizar lote na tabela ${table}:`, error);
+          allSuccess = false;
+
+          // Fallback: try inserting each item individually to bypass duplicate key blocks
+          for (const item of items) {
+            const { error: singleError } = await supabase.from(table as any).insert(item.row);
+            if (!singleError || singleError.code === '23505') {
+              // Success or already exists in database
+              syncedIds.add(item.entry.payload.id);
+            } else {
+              console.error(`Erro ao sincronizar item individual (${item.entry.payload.id}) na tabela ${table}:`, singleError);
+            }
+          }
+        } else {
+          // Entire batch succeeded
+          items.forEach(x => syncedIds.add(x.entry.payload.id));
+        }
       }
 
-      localStorage.setItem(KEY_SYNC_QUEUE, JSON.stringify([]));
-      return true;
-    } catch {
+      // Filter out successfully synced items from queue
+      const remainingQueue = queue.filter(x => x.payload && !syncedIds.has(x.payload.id));
+      localStorage.setItem(KEY_SYNC_QUEUE, JSON.stringify(remainingQueue));
+
+      return allSuccess || remainingQueue.length === 0;
+    } catch (err) {
+      console.error('Erro catastrófico no processSyncQueue:', err);
       return false;
     }
   }
