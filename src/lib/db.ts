@@ -583,3 +583,51 @@ export async function removeEquipmentFromSupabase(id: string): Promise<void> {
     .eq('id', id);
   if (error) throw error;
 }
+
+export async function fetchChecklistRecordsFromSupabase(): Promise<ChecklistRecord[]> {
+  if (!isSupabaseConfigured || !supabase) {
+    return [];
+  }
+  try {
+    const { data, error } = await supabase
+      .from('registros_checklist')
+      .select('*')
+      .order('data', { ascending: false })
+      .order('hora', { ascending: false });
+    
+    if (error) {
+      console.error('Erro ao carregar registros do Supabase:', error);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error('Erro de rede ao carregar registros do Supabase:', err);
+    return [];
+  }
+}
+
+export async function fetchPreventiveChecklistsFromSupabase(): Promise<PreventiveChecklistSubmission[]> {
+  if (!isSupabaseConfigured || !supabase) {
+    return [];
+  }
+  try {
+    const { data, error } = await supabase
+      .from('checklist_preventivo')
+      .select('*')
+      .order('data', { ascending: false })
+      .order('hora', { ascending: false });
+      
+    if (error) {
+      console.error('Erro ao carregar checklists preventivos do Supabase:', error);
+      return [];
+    }
+    
+    return (data || []).map((row: any) => ({
+      ...row,
+      itens: typeof row.itens === 'string' ? JSON.parse(row.itens) : row.itens
+    }));
+  } catch (err) {
+    console.error('Erro de rede ao carregar checklists preventivos do Supabase:', err);
+    return [];
+  }
+}
