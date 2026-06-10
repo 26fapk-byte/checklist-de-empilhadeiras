@@ -1,9 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  LocalDb, 
-  fetchChecklistRecordsFromSupabase, 
-  fetchPreventiveChecklistsFromSupabase 
-} from '../lib/db';
+import { fetchChecklistRecordsFromSupabase } from '../lib/db';
 import { useEquipments } from '../hooks/useEquipments';
 import { ChecklistRecord } from '../types';
 import { 
@@ -32,111 +28,15 @@ export default function History() {
 
   const { equipments } = useEquipments();
 
-  // Load records from local storage and sync with remote Supabase database
+  // Load records from Supabase database (no LocalStorage or offline cache)
   useEffect(() => {
     const loadAllRecords = async () => {
       setLoading(true);
-
-      // 1. Load local records (legacy + modern preventive flattened)
-      const localLegacy = LocalDb.getRecords();
-      const localModern = LocalDb.getPreventiveChecklists();
-      
-      const localFlattened: ChecklistRecord[] = [];
-      
-      localModern.forEach((sub) => {
-        sub.itens.forEach((it) => {
-          localFlattened.push({
-            id: `${sub.id}-${it.itemKey}`,
-            created_at: sub.created_at,
-            data: sub.data,
-            hora: sub.hora,
-            operador: sub.operador,
-            equipamento: sub.equipamento,
-            item: it.itemLabel,
-            status: it.status,
-            observacao: it.observacao,
-            patrimonio: sub.patrimonio,
-            horimetro: sub.horimetro,
-            ligando: 'OK',
-            bateria_barras: sub.bateria_barras
-          });
-        });
-        if (sub.observacoes_gerais && sub.observacoes_gerais.trim()) {
-          localFlattened.push({
-            id: `${sub.id}-geral`,
-            created_at: sub.created_at,
-            data: sub.data,
-            hora: sub.hora,
-            operador: sub.operador,
-            equipamento: sub.equipamento,
-            item: 'Observações Gerais',
-            status: 'OK',
-            observacao: sub.observacoes_gerais,
-            patrimonio: sub.patrimonio,
-            horimetro: sub.horimetro,
-            ligando: 'OK',
-            bateria_barras: sub.bateria_barras
-          });
-        }
-      });
-
-      const initialRecords = [...localLegacy, ...localFlattened];
-      setRecords(initialRecords);
-
-      // 2. Load from Supabase in background
       try {
-        const remoteLegacy = await fetchChecklistRecordsFromSupabase();
-        const remoteModern = await fetchPreventiveChecklistsFromSupabase();
-        
-        const remoteFlattened: ChecklistRecord[] = [];
-        remoteModern.forEach((sub) => {
-          sub.itens.forEach((it) => {
-            remoteFlattened.push({
-              id: `${sub.id}-${it.itemKey}`,
-              created_at: sub.created_at,
-              data: sub.data,
-              hora: sub.hora,
-              operador: sub.operador,
-              equipamento: sub.equipamento,
-              item: it.itemLabel,
-              status: it.status,
-              observacao: it.observacao,
-              patrimonio: sub.patrimonio,
-              horimetro: sub.horimetro,
-              ligando: 'OK',
-              bateria_barras: sub.bateria_barras
-            });
-          });
-          if (sub.observacoes_gerais && sub.observacoes_gerais.trim()) {
-            remoteFlattened.push({
-              id: `${sub.id}-geral`,
-              created_at: sub.created_at,
-              data: sub.data,
-              hora: sub.hora,
-              operador: sub.operador,
-              equipamento: sub.equipamento,
-              item: 'Observações Gerais',
-              status: 'OK',
-              observacao: sub.observacoes_gerais,
-              patrimonio: sub.patrimonio,
-              horimetro: sub.horimetro,
-              ligando: 'OK',
-              bateria_barras: sub.bateria_barras
-            });
-          }
-        });
-
-        const allCombined = [...initialRecords, ...remoteLegacy, ...remoteFlattened];
-        
-        // Remove duplicates by ID
-        const uniqueMap = new Map<string, ChecklistRecord>();
-        allCombined.forEach(rec => {
-          uniqueMap.set(rec.id, rec);
-        });
-
-        setRecords(Array.from(uniqueMap.values()));
+        const remoteRecords = await fetchChecklistRecordsFromSupabase();
+        setRecords(remoteRecords);
       } catch (err) {
-        console.error('Erro ao buscar dados remotos para o histórico:', err);
+        console.error('Erro ao buscar registros do Supabase para o histórico:', err);
       } finally {
         setLoading(false);
       }
