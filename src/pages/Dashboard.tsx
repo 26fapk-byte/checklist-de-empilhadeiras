@@ -212,7 +212,7 @@ export default function Dashboard() {
           <select value={selectedEq} onChange={(event) => setSelectedEq(event.target.value)} className="tkf-select mt-1">
             <option value="Todos">Todos os ativos</option>
             {equipments.map((eq) => (
-              <option key={eq.id} value={eq.patrimonio}>{eq.patrimonio}</option>
+              <option key={eq.id} value={eq.patrimonio}>{eq.patrimonio} - {eq.nome}</option>
             ))}
           </select>
         </div>
