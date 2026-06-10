@@ -1,13 +1,7 @@
-<<<<<<< HEAD
-﻿import React, { useEffect, useMemo, useState } from 'react';
-import { LocalDb, createEquipment, removeEquipment } from '../lib/db';
+import React, { useEffect, useMemo, useState } from 'react';
+import { LocalDb, createEquipment, removeEquipment, generateUUID } from '../lib/db';
 import { ChecklistRecord } from '../types';
 import { useEquipments } from '../hooks/useEquipments';
-=======
-import React, { useEffect, useMemo, useState } from 'react';
-import { LocalDb, generateUUID, getEquipmentsFromSupabase, addEquipmentToSupabase, removeEquipmentFromSupabase } from '../lib/db';
-import { ChecklistRecord, Equipment } from '../types';
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 import {
   Truck,
   AlertCircle,
@@ -37,16 +31,7 @@ export default function Dashboard() {
 
   const loadData = async () => {
     setRecords(LocalDb.getRecords());
-<<<<<<< HEAD
     reloadEquipments();
-=======
-    try {
-      const data = await getEquipmentsFromSupabase();
-      setEquipments(data);
-    } catch (err) {
-      console.error(err);
-    }
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
   };
 
   useEffect(() => {
@@ -167,7 +152,6 @@ export default function Dashboard() {
       patrimonio: equipmentPatrimonio.trim().toUpperCase(),
       tipo: equipmentType.trim(),
       ativo: true
-<<<<<<< HEAD
     });
     if (!result.success) {
       setNotification({ message: result.error || 'Não foi possível cadastrar o equipamento.', type: 'error' });
@@ -188,29 +172,6 @@ export default function Dashboard() {
     }
     setNotification({ message: 'Equipamento removido da frota.', type: 'success' });
     loadData();
-=======
-    };
-    try {
-      await addEquipmentToSupabase(newEquipment);
-      setEquipmentName('');
-      setEquipmentPatrimonio('');
-      setEquipmentType('');
-      setNotification({ message: 'Equipamento cadastrado com sucesso.', type: 'success' });
-      await loadData();
-    } catch (err) {
-      setNotification({ message: 'Não foi possível cadastrar no Supabase.', type: 'error' });
-    }
-  };
-
-  const handleRemoveEquipment = async (id: string) => {
-    try {
-      await removeEquipmentFromSupabase(id);
-      setNotification({ message: 'Equipamento removido da frota.', type: 'success' });
-      await loadData();
-    } catch (err) {
-      setNotification({ message: 'Não foi possível remover no Supabase.', type: 'error' });
-    }
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
   };
 
   useEffect(() => {

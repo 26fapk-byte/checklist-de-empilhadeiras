@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -90,11 +90,7 @@ export default function TeamManagement() {
     setSuccessMsg(null);
 
     if (!isSupabaseReady || !supabase) {
-<<<<<<< HEAD
-      setErrorMsg('Supabase n�o est� configurado. O cadastro de colaboradores n�o � poss�vel no momento.');
-=======
-      setErrorMsg('Supabase n�o est� configurado. O cadastro de colaboradores n�o � poss�vel no momento.');
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+      setErrorMsg('Supabase nï¿½o estï¿½ configurado. O cadastro de colaboradores nï¿½o ï¿½ possï¿½vel no momento.');
       setSubmitting(false);
       return;
     }
@@ -116,11 +112,7 @@ export default function TeamManagement() {
       }
 
       if (!signUpData.user) {
-<<<<<<< HEAD
-        throw new Error('N�o foi poss�vel gerar o usu�rio no provedor de autentica��o.');
-=======
-        throw new Error('N�o foi poss�vel gerar o usu�rio no provedor de autentica��o.');
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+        throw new Error('Nï¿½o foi possï¿½vel gerar o usuï¿½rio no provedor de autenticaï¿½ï¿½o.');
       }
 
       const { error: profileError } = await supabase
@@ -133,11 +125,7 @@ export default function TeamManagement() {
         });
 
       if (profileError) {
-<<<<<<< HEAD
-        throw new Error('Usu�rio criado, mas falha ao salvar perfil de acesso: ' + profileError.message);
-=======
-        throw new Error('Usu�rio criado, mas falha ao salvar perfil de acesso: ' + profileError.message);
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+        throw new Error('Usuï¿½rio criado, mas falha ao salvar perfil de acesso: ' + profileError.message);
       }
 
       setSuccessMsg(`Colaborador ${values.fullName} cadastrado como ${assignedRole}.`);
@@ -146,11 +134,7 @@ export default function TeamManagement() {
     } catch (err: any) {
       const message = err?.message ?? 'Erro ao cadastrar colaborador.';
       if (message.includes('already registered')) {
-<<<<<<< HEAD
-        setErrorMsg('Este e-mail j� existe no sistema. Utilize outro e-mail de acesso.');
-=======
-        setErrorMsg('Este e-mail j� existe no sistema. Utilize outro e-mail de acesso.');
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+        setErrorMsg('Este e-mail jï¿½ existe no sistema. Utilize outro e-mail de acesso.');
       } else {
         setErrorMsg(message);
       }
@@ -189,37 +173,21 @@ export default function TeamManagement() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
               <Users className="w-6 h-6 text-[#1E3A8A]" />
-<<<<<<< HEAD
-              <span>Gest�o de Acesso LogiCheck</span>
+              <span>Gestï¿½o de Acesso LogiCheck</span>
             </h1>
             <p className="text-xs text-[#6C797B] max-w-2xl">
-              Cadastre novos usu�rios de campo e mantenha o controle de acesso em ambiente seguro e mobile-first.
+              Cadastre novos usuï¿½rios de campo e mantenha o controle de acesso em ambiente seguro e mobile-first.
             </p>
           </div>
           <div className="text-xs text-[#6C797B] bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-2 rounded-lg max-w-[320px]">
-            <span className="font-semibold">Modo de cria��o:</span>{' '}
-            {canCreateManager ? 'Master pode criar gerentes e operadores.' : 'Gerentes s� podem criar operadores.'}
-=======
-              <span>Gest�o de Acesso LogiCheck</span>
-            </h1>
-            <p className="text-xs text-[#6C797B] max-w-2xl">
-              Cadastre novos usu�rios de campo e mantenha o controle de acesso em ambiente seguro e mobile-first.
-            </p>
-          </div>
-          <div className="text-xs text-[#6C797B] bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-2 rounded-lg max-w-[320px]">
-            <span className="font-semibold">Modo de cria��o:</span>{' '}
-            {canCreateManager ? 'Master pode criar gerentes e operadores.' : 'Gerentes s� podem criar operadores.'}
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+            <span className="font-semibold">Modo de criaï¿½ï¿½o:</span>{' '}
+            {canCreateManager ? 'Master pode criar gerentes e operadores.' : 'Gerentes sï¿½ podem criar operadores.'}
           </div>
         </div>
 
         {!isSupabaseReady && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 text-amber-700 p-4 text-sm">
-<<<<<<< HEAD
-            <strong>Aten��o:</strong> Supabase n�o est� configurado. O cadastro de colaboradores n�o pode ser conclu�do.
-=======
-            <strong>Aten��o:</strong> Supabase n�o est� configurado. O cadastro de colaboradores n�o pode ser conclu�do.
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+            <strong>Atenï¿½ï¿½o:</strong> Supabase nï¿½o estï¿½ configurado. O cadastro de colaboradores nï¿½o pode ser concluï¿½do.
           </div>
         )}
       </div>
@@ -273,11 +241,7 @@ export default function TeamManagement() {
                 type="email"
                 {...register('email', {
                   required: 'Informe o e-mail corporativo.',
-<<<<<<< HEAD
-                  pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'E-mail inv�lido.' }
-=======
-                  pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'E-mail inv�lido.' }
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+                  pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'E-mail invï¿½lido.' }
                 })}
                 className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#1E293B] focus:border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/10"
                 placeholder="nova.pessoa@tkflogicheck.com"
@@ -297,11 +261,7 @@ export default function TeamManagement() {
                     minLength: { value: 6, message: 'A senha precisa ter ao menos 6 caracteres.' }
                   })}
                   className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 pr-10 text-sm text-[#1E293B] focus:border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/10"
-<<<<<<< HEAD
-                  placeholder="������"
-=======
-                  placeholder="������"
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+                  placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
                 />
                 <button
                   type="button"
@@ -316,11 +276,7 @@ export default function TeamManagement() {
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#6C797B]">
-<<<<<<< HEAD
-                N�vel de acesso
-=======
-                N�vel de acesso
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+                Nï¿½vel de acesso
               </label>
               <select
                 {...register('role')}
@@ -331,11 +287,7 @@ export default function TeamManagement() {
                 <option value="gerente">Gerente</option>
               </select>
               {!canCreateManager && (
-<<<<<<< HEAD
-                <p className="text-[11px] text-[#6C797B] mt-1">Gerentes s� podem criar operadores.</p>
-=======
-                <p className="text-[11px] text-[#6C797B] mt-1">Gerentes s� podem criar operadores.</p>
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+                <p className="text-[11px] text-[#6C797B] mt-1">Gerentes sï¿½ podem criar operadores.</p>
               )}
             </div>
 
@@ -353,11 +305,7 @@ export default function TeamManagement() {
           <div className="flex items-center justify-between gap-3 mb-5">
             <div>
               <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-[#1E3A8A]">Colaboradores Cadastrados</h2>
-<<<<<<< HEAD
-              <p className="text-[11px] text-[#6C797B] mt-1">Lista de acessos que foram registrados nesta inst�ncia do sistema.</p>
-=======
-              <p className="text-[11px] text-[#6C797B] mt-1">Lista de acessos que foram registrados nesta inst�ncia do sistema.</p>
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+              <p className="text-[11px] text-[#6C797B] mt-1">Lista de acessos que foram registrados nesta instï¿½ncia do sistema.</p>
             </div>
             <span className="text-[11px] bg-[#E6F7F8] border border-[#1e3a8a] text-[#006970] px-3 py-2 rounded-full font-semibold">
               {sortedProfiles.length} perfis
@@ -370,11 +318,7 @@ export default function TeamManagement() {
               <span>Sincronizando perfis...</span>
             </div>
           ) : sortedProfiles.length === 0 ? (
-<<<<<<< HEAD
-            <div className="py-12 text-center text-[#6C797B] text-sm">Nenhum perfil dispon�vel no momento.</div>
-=======
-            <div className="py-12 text-center text-[#6C797B] text-sm">Nenhum perfil dispon�vel no momento.</div>
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+            <div className="py-12 text-center text-[#6C797B] text-sm">Nenhum perfil disponï¿½vel no momento.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-[12px] text-[#1E293B]">
@@ -383,11 +327,7 @@ export default function TeamManagement() {
                     <th className="py-3 px-2">ID</th>
                     <th className="py-3 px-2">Nome / E-mail</th>
                     <th className="py-3 px-2">Cargo</th>
-<<<<<<< HEAD
-                    <th className="py-3 px-2 text-right">A��es</th>
-=======
-                    <th className="py-3 px-2 text-right">A��es</th>
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+                    <th className="py-3 px-2 text-right">Aï¿½ï¿½es</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -410,11 +350,7 @@ export default function TeamManagement() {
                             Excluir
                           </button>
                         ) : (
-<<<<<<< HEAD
-                          <span className="inline-flex items-center rounded-full bg-[#F8FAFC] px-3 py-2 text-[10px] text-[#6C797B] uppercase tracking-[0.16em]">Sem permiss�o</span>
-=======
-                          <span className="inline-flex items-center rounded-full bg-[#F8FAFC] px-3 py-2 text-[10px] text-[#6C797B] uppercase tracking-[0.16em]">Sem permiss�o</span>
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+                          <span className="inline-flex items-center rounded-full bg-[#F8FAFC] px-3 py-2 text-[10px] text-[#6C797B] uppercase tracking-[0.16em]">Sem permissï¿½o</span>
                         )}
                       </td>
                     </tr>
@@ -429,23 +365,16 @@ export default function TeamManagement() {
       <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 text-[11px] text-[#3D494A]">
         <div className="flex items-center gap-2 font-semibold text-[#0F172A] mb-2">
           <Info className="w-4 h-4" />
-<<<<<<< HEAD
-          Painel de observa��es de governan�a
+          Painel de observaï¿½ï¿½es de governanï¿½a
         </div>
         <p>
-          A plataforma TKF LogiCheck integra autenticação Supabase com controle de acesso granular através da tabela <code className="rounded bg-white px-1 py-0.5">perfis_usuarios</code>. 
-          O nível de acesso <strong>gerente</strong> é exclusivamente destinado a administradores autorizados pela organização. 
-          Usuários com nível <strong>operador</strong> realizam inspeções preventivas e registram manutenção de equipamentos. 
-          O acesso <strong>master</strong> é restrito ao gestor administrativo principal do sistema.
-=======
-          Painel de observa��es de governan�a
-        </div>
-        <p>
-          A cria��o de usu�rios no frontend integra Supabase Auth e a tabela <code className="rounded bg-white px-1 py-0.5">perfis_usuarios</code>.
-          O papel de gerente s� aparece para o master <strong>flavio.frire@ativa.com</strong>. Gerentes comuns criam somente operadores.
->>>>>>> 16ebf877fc4a93034fdadfa2654284c51a7ee769
+          A plataforma TKF LogiCheck integra autenticaÃ§Ã£o Supabase com controle de acesso granular atravÃ©s da tabela <code className="rounded bg-white px-1 py-0.5">perfis_usuarios</code>. 
+          O nÃ­vel de acesso <strong>gerente</strong> Ã© exclusivamente destinado a administradores autorizados pela organizaÃ§Ã£o. 
+          UsuÃ¡rios com nÃ­vel <strong>operador</strong> realizam inspeÃ§Ãµes preventivas e registram manutenÃ§Ã£o de equipamentos. 
+          O acesso <strong>master</strong> Ã© restrito ao gestor administrativo principal do sistema.
         </p>
       </div>
     </div>
   );
 }
+

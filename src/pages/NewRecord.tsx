@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-<<<<<<< HEAD
 import { LocalDb, CHECKLIST_ITEMS, generateUUID } from '../lib/db';
 import { useEquipments } from '../hooks/useEquipments';
 import { ChecklistRecord } from '../types';
-=======
-import { LocalDb, CHECKLIST_ITEMS, generateUUID, getEquipmentsFromSupabase } from '../lib/db';
-import { ChecklistRecord, Equipment } from '../types';
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 import { useAuth } from '../context/AuthContext';
 import { 
   CheckCircle2, 
@@ -25,21 +20,7 @@ import { useToast } from '../hooks/useToast';
 
 export default function NewRecord() {
   const { user } = useAuth();
-<<<<<<< HEAD
   const { equipments } = useEquipments();
-=======
-  const [equipments, setEquipments] = useState<Equipment[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      const data = await getEquipmentsFromSupabase();
-      if (active) setEquipments(data);
-    }
-    load();
-    return () => { active = false; };
-  }, []);
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 
   // Always include current authenticated user as an available operator.
   const operators = useMemo(() => {

@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 import React, { useState, useMemo } from 'react';
 import { LocalDb } from '../lib/db';
 import { useEquipments } from '../hooks/useEquipments';
-=======
-import React, { useState, useMemo, useEffect } from 'react';
-import { LocalDb, getEquipmentsFromSupabase } from '../lib/db';
-import { Equipment } from '../types';
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 import { 
   Search, 
   ChevronLeft, 
@@ -28,21 +22,7 @@ export default function History() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
 
-<<<<<<< HEAD
   const { equipments } = useEquipments();
-=======
-  const [equipments, setEquipments] = useState<Equipment[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      const data = await getEquipmentsFromSupabase();
-      if (active) setEquipments(data);
-    }
-    load();
-    return () => { active = false; };
-  }, []);
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 
   // Retrieve records from database
   const records = useMemo(() => {

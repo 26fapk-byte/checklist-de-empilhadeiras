@@ -1,11 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { BatteryCharging, Clock3, Droplets, Gauge, Wrench } from 'lucide-react';
-<<<<<<< HEAD
 import { LocalDb, generateUUID } from '../lib/db';
 import { useEquipments } from '../hooks/useEquipments';
-=======
-import { LocalDb, generateUUID, getEquipmentsFromSupabase } from '../lib/db';
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 import { useAuth } from '../context/AuthContext';
 import { BatteryRechargeRecord, Equipment } from '../types';
 import StatusToggle from '../components/StatusToggle';
@@ -14,11 +10,7 @@ import { useToast } from '../hooks/useToast';
 
 export default function BatteryRecharge() {
   const { user } = useAuth();
-<<<<<<< HEAD
   const { equipments } = useEquipments();
-=======
-  const [equipments, setEquipments] = useState<Equipment[]>([]);
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
   const { toast, showToast } = useToast();
 
   const [patrimonio, setPatrimonio] = useState('');
@@ -33,16 +25,6 @@ export default function BatteryRecharge() {
   const [observacoes, setObservacoes] = useState('');
   const [signatureName, setSignatureName] = useState(user?.name || '');
   const [signatureAccepted, setSignatureAccepted] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      const data = await getEquipmentsFromSupabase();
-      if (active) setEquipments(data);
-    }
-    load();
-    return () => { active = false; };
-  }, []);
 
   const latest = useMemo(() => LocalDb.getBatteryRechargeRecords().slice(0, 4), [toast.visible]);
 

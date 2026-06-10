@@ -1,12 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { AlertTriangle, Battery, ClipboardCheck, Gauge, Truck } from 'lucide-react';
-<<<<<<< HEAD
 import { LocalDb, CHECKLIST_ITEMS, generateUUID } from '../lib/db';
 import { useEquipments } from '../hooks/useEquipments';
-=======
-import { CHECKLIST_ITEMS, generateUUID, getEquipmentsFromSupabase } from '../lib/db';
-import { supabase } from '../lib/supabase'; // Garanta que essa importação aponta para o seu cliente supabase
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
 import { useAuth } from '../context/AuthContext';
 import { PreventiveChecklistSubmission, Equipment } from '../types';
 import StatusToggle from '../components/StatusToggle';
@@ -15,11 +10,7 @@ import { useToast } from '../hooks/useToast';
 
 export default function PreventiveChecklist() {
   const { user } = useAuth();
-<<<<<<< HEAD
   const { equipments } = useEquipments();
-=======
-  const [equipments, setEquipments] = useState<any[]>([]);
->>>>>>> 71e48a44c06d50148231a4e67a1b99e65bbfe284
   const { toast, showToast } = useToast();
   const [equipment, setEquipment] = useState('');
   const [horimetro, setHorimetro] = useState('');
@@ -27,31 +18,6 @@ export default function PreventiveChecklist() {
   const [generalNotes, setGeneralNotes] = useState('');
   const [signatureName, setSignatureName] = useState(user?.name || '');
   const [signatureAccepted, setSignatureAccepted] = useState(false);
-  const [latestRecords, setLatestRecords] = useState<any[]>([]);
-
-  // 1. CARREGA EQUIPAMENTOS DO SUPABASE
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      const data = await getEquipmentsFromSupabase();
-      if (active) setEquipments(data || []);
-    }
-    load();
-    return () => { active = false; };
-  }, []);
-
-  // 2. CARREGA HISTÓRICO REAL DO SUPABASE PARA O PREVIEW
-  useEffect(() => {
-    async function loadHistory() {
-      const { data } = await supabase
-        .from('registros_checklist')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(4);
-      if (data) setLatestRecords(data);
-    }
-    loadHistory();
-  }, [toast.visible]);
 
   const [itemsState, setItemsState] = useState<Record<string, { status: 'OK' | 'NOK'; observacao: string }>>(() => {
     const state: Record<string, { status: 'OK' | 'NOK'; observacao: string }> = {};
@@ -66,7 +32,6 @@ export default function PreventiveChecklist() {
     [itemsState]
   );
 
-  // 3. SALVAMENTO DIRETO NO BANCO DE DADOS (SUPABASE)
   const handleSave = async () => {
     if (!user) return;
     if (!equipment) return showToast('Selecione o equipamento inspecionado.', 'error');
@@ -78,16 +43,15 @@ export default function PreventiveChecklist() {
     const pending = CHECKLIST_ITEMS.find((item) => itemsState[item.key].status === 'NOK' && !itemsState[item.key].observacao.trim());
     if (pending) return showToast(`Descreva o item NOK: ${pending.label}.`, 'error');
 
-    // Mapeia usando o id ou codigo vindo do banco
-    const selectedEq = equipments.find((eq) => eq.id === equipment || eq.codigo === equipment);
+    const selectedEq = equipments.find((eq) => eq.patrimonio === equipment);
     const now = new Date();
-    
-    const submission = {
+
+    const submission: PreventiveChecklistSubmission = {
       id: generateUUID(),
       created_at: now.toISOString(),
       data: now.toISOString().slice(0, 10),
       hora: now.toTimeString().slice(0, 5),
-      operador: user.email,
+      operador: user.name || user.email || '',
       equipamento: selectedEq ? selectedEq.nome : 'Empilhadeira',
       patrimonio: equipment,
       horimetro: Number(horimetro.replace(',', '.')),
@@ -104,20 +68,15 @@ export default function PreventiveChecklist() {
       }))
     };
 
-    // Gravação assíncrona no Supabase
-    const { error } = await supabase.from('registros_checklist').insert([submission]);
-
-    if (error) {
-      showToast(`Erro ao salvar no banco: ${error.message}`, 'error');
-    } else {
-      showToast('Checklist preventivo registrado com sucesso no Supabase.');
-      setEquipment('');
-      setHorimetro('');
-      setBatteryBars(4);
-      setGeneralNotes('');
-      setSignatureAccepted(false);
-    }
+    LocalDb.savePreventiveChecklist(submission);
+    showToast('Checklist preventivo registrado com sucesso.');
+    setEquipment('');
+    setHorimetro('');
+    setBatteryBars(4);
+    setGeneralNotes('');
+    setSignatureAccepted(false);
   };
+
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-4 py-5 pb-24 text-white">
@@ -149,14 +108,11 @@ export default function PreventiveChecklist() {
           <label className="tkf-label">Equipamento</label>
           <select value={equipment} onChange={(event) => setEquipment(event.target.value)} className="tkf-select mt-1.5">
             <option value="">Selecionar patrimônio</option>
-            {equipments.map((eq) => {
-              const displayValue = eq.codigo || eq.patrimonio;
-              return (
-                <option key={eq.id} value={displayValue}>
-                  {displayValue} - {eq.nome}
-                </option>
-              );
-            })}
+            {equipments.map((eq) => (
+              <option key={eq.id} value={eq.patrimonio}>
+                {eq.patrimonio} - {eq.nome}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -217,7 +173,7 @@ export default function PreventiveChecklist() {
       </section>
 
       <section className="tkf-card p-4">
-        <SignatureField name={signatureName} onNameChange={setSignatureName} accepted={signatureAccepted} onAcceptChange={setSignatureAccepted} />
+        <SignatureField signerName={signatureName} onSignerNameChange={setSignatureName} acknowledged={signatureAccepted} onAcknowledgedChange={setSignatureAccepted} />
         <button type="button" onClick={handleSave} className="tkf-btn-primary w-full mt-4 py-3.5 text-sm font-bold tracking-wide">
           Salvar e Enviar Inspeção
         </button>
